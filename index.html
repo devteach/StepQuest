@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StepQuest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#1a1a2e;--paper:#faf8f2;--paper2:#f0ede3;--accent:#c8392b;--accent2:#2e6da4;--gold:#c9841a;--green:#2d7a4f;--border:rgba(26,26,46,0.15);--fh:'Gowun Dodum',serif;--fb:'Noto Sans KR',sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--fb);min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(26,26,46,.06) 39px,rgba(26,26,46,.06) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(26,26,46,.06) 39px,rgba(26,26,46,.06) 40px)}
+  .wrap{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:16px}
+  .app-header{text-align:center;padding:28px 0 20px;border-bottom:2px solid var(--ink);margin-bottom:20px}
+  .app-header .emoji{font-size:40px;display:block;margin-bottom:6px}
+  .app-header h1{font-family:var(--fh);font-size:22px;letter-spacing:-.5px}
+  .app-header .sub{font-size:12px;color:rgba(26,26,46,.5);margin-top:4px}
+  .team-chip{display:inline-block;margin-top:10px;background:var(--ink);color:var(--paper);font-size:12px;padding:4px 14px;border-radius:20px;font-weight:500}
+  .card{background:var(--paper);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;position:relative}
+  .card-stamp-ok::after{content:'🏆';position:absolute;top:12px;right:12px;font-size:28px}
+  .card-stamp-wait::after{content:'⏳';position:absolute;top:12px;right:12px;font-size:24px}
+  .card-stamp-rej::after{content:'✕';position:absolute;top:10px;right:14px;font-size:20px;font-weight:700;color:var(--accent)}
+  .login-card{background:var(--paper);border:2px solid var(--ink);border-radius:12px;padding:28px 22px}
+  .login-card h2{font-family:var(--fh);font-size:18px;margin-bottom:20px;text-align:center}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:11px;font-weight:700;margin-bottom:5px;letter-spacing:.5px;color:rgba(26,26,46,.6)}
+  .field input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:var(--fb);background:var(--paper);color:var(--ink);transition:border-color .2s}
+  .field input:focus{outline:none;border-color:var(--ink)}
+  .pw-link{display:block;text-align:right;font-size:12px;color:var(--accent2);cursor:pointer;margin-top:5px;text-decoration:underline}
+  .btn{width:100%;padding:13px;border:none;border-radius:8px;font-size:15px;font-weight:700;font-family:var(--fb);cursor:pointer;transition:opacity .15s,transform .1s}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--ink);color:var(--paper)}
+  .btn-primary:hover{opacity:.85}
+  .btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--border);margin-top:8px}
+  .btn-success{background:var(--green);color:#fff}
+  .btn-sm{width:auto;padding:7px 16px;font-size:13px;font-weight:500;margin-top:0}
+  .prog-wrap{margin-bottom:16px}
+  .prog-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;color:rgba(26,26,46,.6)}
+  .prog-track{height:8px;background:var(--paper2);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+  .prog-bar{height:100%;background:var(--gold);border-radius:4px;transition:width .4s}
+  .stamp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+  .stamp-box{aspect-ratio:1;border:1.5px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--paper2)}
+  .stamp-box.on{background:#fff8e6;border-color:var(--gold)}
+  .m-icon{font-size:22px;margin-bottom:8px;display:block}
+  .m-title{font-family:var(--fh);font-size:15px;margin-bottom:4px;padding-right:38px}
+  .m-desc{font-size:13px;color:rgba(26,26,46,.6);margin-bottom:12px;line-height:1.6}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .b-wait{background:#fff3cd;color:#7d5a00}
+  .b-ok{background:#d4edda;color:#1a5c2a}
+  .b-rej{background:#fde8e8;color:#8b1a1a}
+  .b-none{background:var(--paper2);color:rgba(26,26,46,.5)}
+  .b-team{background:#e8f0fb;color:var(--accent2);margin-left:4px}
+  .upload-area{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;background:var(--paper2);position:relative;transition:background .2s,border-color .2s}
+  .upload-area:hover{border-color:var(--ink);background:#ede9de}
+  .upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .preview-img{width:100%;border-radius:8px;margin-bottom:10px;max-height:200px;object-fit:cover;display:none}
+  .rej-msg{background:#fde8e8;border-left:3px solid var(--accent);padding:10px 12px;border-radius:0 6px 6px 0;font-size:13px;color:#5c1a1a;margin-bottom:10px;line-height:1.6}
+  .loading{position:fixed;inset:0;z-index:100;background:rgba(250,248,242,.88);display:none;align-items:center;justify-content:center;font-size:14px;gap:10px}
+  .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 20px;border-radius:24px;font-size:13px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1}
+  .err{font-size:12px;color:var(--accent);margin-top:8px;text-align:center;min-height:18px}
+  .screen{display:none}
+  .screen.active{display:block;animation:fadeUp .25s ease}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app-header">
+    <span class="emoji">🏅</span>
+    <h1>걸어서 만나는 퀘스트트</h1>
+    <p class="sub" id="trip-name">잠시만요...</p>
+    <div id="chip-wrap" style="display:none"><span class="team-chip" id="chip-text"></span></div>
+  </header>
+
+  <!-- 로그인 -->
+  <div id="screen-login" class="screen active">
+    <div class="login-card">
+      <h2>🎒 입장하기</h2>
+      <div class="field">
+        <label>이름</label>
+        <input id="inp-name" type="text" placeholder="홍길동" autocomplete="name" maxlength="10">
+      </div>
+      <div class="field">
+        <label>PIN 번호</label>
+        <!-- PIN 입력: 숫자 키패드가 뜨도록 inputmode="numeric" -->
+        <input id="inp-pin" type="password" placeholder="선생님께 받은 PIN 번호"
+               inputmode="numeric" maxlength="6"
+               onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <p class="err" id="login-err"></p>
+      <button class="btn btn-primary" onclick="doLogin()">입장</button>
+    </div>
+    <p style="font-size:12px;color:rgba(26,26,46,.45);text-align:center;margin-top:14px;line-height:1.7">이름과 PIN 번호를 모른다면 선생님께 문의하세요.</p>
+  </div>
+
+  <!-- 미션 목록 -->
+  <div id="screen-missions" class="screen">
+    <div class="prog-wrap">
+      <div class="prog-label"><span>🏆 도장 현황</span><span id="prog-text">0 / 0</span></div>
+      <div class="prog-track"><div class="prog-bar" id="prog-bar" style="width:0%"></div></div>
+    </div>
+    <div class="stamp-grid" id="stamp-grid"></div>
+    <div id="mission-list"></div>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="doLogout()">로그아웃</button>
+  </div>
+
+  <!-- 미션 상세 -->
+  <div id="screen-detail" class="screen">
+    <button class="btn btn-ghost btn-sm" style="margin-bottom:16px" onclick="showMissions()">← 목록으로</button>
+    <div class="card" id="detail-card"></div>
+  </div>
+</div>
+
+<div class="loading" id="loading"><div class="spinner"></div><span id="lmsg">잠시만요...</span></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import{getFirestore,collection,doc,getDoc,getDocs,addDoc,onSnapshot,query,where,orderBy,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+/* Cloudinary 설정 */
+const CLOUDINARY_CLOUD='doaj5mitt';
+const CLOUDINARY_PRESET='StepQuest';
+
+/* ★ Firebase 설정을 본인 것으로 교체하세요 ★ */
+const firebaseConfig={apiKey:"AIzaSyCVuWl_431EoKCnsjYId1aauxlWBrM9g8M",authDomain:"devteach1225.firebaseapp.com",projectId:"devteach1225",storageBucket:"devteach1225.appspot.com",messagingSenderId:"987549318245",appId:"1:987549318245:web:9aa42b0663dc93408b1a8c"};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let userProfile=null,missions=[],submissions={},unsubSubs=null;
+const $=id=>document.getElementById(id);
+const showScreen=name=>['login','missions','detail'].forEach(s=>$('screen-'+s).classList.toggle('active',s===name));
+const showLoading=(m='')=>{$('loading').style.display='flex';$('lmsg').textContent=m||'잠시만요...'};
+const hideLoading=()=>$('loading').style.display='none';
+const toast=(msg,dur=2400)=>{const e=$('toast');e.textContent=msg;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),dur)};
+
+onAuthStateChanged(auth,async user=>{
+  if(user){await afterLogin(user);}
+  else{showScreen('login');hideLoading();}
+});
+
+window.doLogin=async()=>{
+  const name=$('inp-name').value.trim();
+  const pin=$('inp-pin').value.trim();
+  $('login-err').textContent='';
+  if(!name){$('login-err').textContent='이름을 입력해 주세요.';return;}
+  if(!pin){$('login-err').textContent='PIN 번호를 입력해 주세요.';return;}
+  if(!/^\d{4,6}$/.test(pin)){$('login-err').textContent='PIN은 숫자 4~6자리예요.';return;}
+  showLoading('확인 중...');
+  /* 이름을 이메일 형식으로 변환 (Firebase Auth는 이메일 필요)
+     예: 홍길동 → 홍길동@stepquest.app
+     학생은 이 이메일을 몰라도 됨 — 내부적으로만 사용 */
+  const email=encodeURIComponent(name)+'@stepquest.app';
+  try{await signInWithEmailAndPassword(auth,email,pin);}
+  catch(e){
+    hideLoading();
+    const m={
+      'auth/user-not-found':'이름을 확인해 주세요.',
+      'auth/wrong-password':'PIN 번호가 틀렸어요.',
+      'auth/invalid-credential':'이름 또는 PIN 번호를 확인해 주세요.',
+      'auth/too-many-requests':'잠시 후 다시 시도해 주세요.'
+    };
+    $('login-err').textContent=m[e.code]||'로그인 실패. 다시 시도해 주세요.';
+  }
+};
+
+
+
+async function afterLogin(user){
+  showLoading('정보 불러오는 중...');
+  try{
+    const uSnap=await getDoc(doc(db,'users',user.uid));
+    if(!uSnap.exists()){
+      await signOut(auth);hideLoading();
+      $('login-err').textContent='계정 정보를 찾을 수 없어요. 선생님께 문의하세요.';
+      showScreen('login');return;
+    }
+    userProfile={uid:user.uid,...uSnap.data()};
+
+    const cfgSnap=await getDoc(doc(db,'config','main'));
+    if(cfgSnap.exists()){const c=cfgSnap.data();$('trip-name').textContent=(c.tripName||'')+(c.tripDate?' · '+c.tripDate:'');}
+    else $('trip-name').textContent='StepQuest';
+
+    $('chip-wrap').style.display='block';
+    $('chip-text').textContent=`${userProfile.teamName||userProfile.teamId} · ${userProfile.displayName}`;
+
+    const mSnap=await getDocs(query(collection(db,'missions'),where('active','==',true),orderBy('order')));
+    missions=mSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    if(unsubSubs)unsubSubs();
+    unsubSubs=onSnapshot(query(collection(db,'submissions'),where('uid','==',user.uid)),snap=>{
+      submissions={};
+      snap.docs.forEach(d=>{submissions[d.data().missionId]={_id:d.id,...d.data()};});
+      renderMissions();
+    });
+
+    hideLoading();showScreen('missions');
+  }catch(e){hideLoading();toast('불러오기 실패. 새로고침 해주세요.');console.error(e);}
+}
+
+window.doLogout=async()=>{
+  if(unsubSubs){unsubSubs();unsubSubs=null;}
+  await signOut(auth);
+  userProfile=null;missions=[];submissions={};
+  $('chip-wrap').style.display='none';$('inp-name').value='';$('inp-pin').value='';
+  showScreen('login');
+};
+
+function renderMissions(){
+  const approved=missions.filter(m=>submissions[m.id]?.status==='approved').length;
+  $('prog-text').textContent=`${approved} / ${missions.length}`;
+  $('prog-bar').style.width=missions.length?`${(approved/missions.length)*100}%`:'0%';
+
+  $('stamp-grid').innerHTML=missions.slice(0,8).map((m,i)=>{
+    const ok=submissions[m.id]?.status==='approved';
+    return`<div class="stamp-box ${ok?'on':''}">${ok?'🏆':`<span style="font-size:12px;color:rgba(26,26,46,.25)">${i+1}</span>`}</div>`;
+  }).join('');
+
+  const sc={approved:'card-stamp-ok',pending:'card-stamp-wait',rejected:'card-stamp-rej'};
+  const bc={approved:'b-ok',pending:'b-wait',rejected:'b-rej',none:'b-none'};
+  const bl={approved:'✓ 도장 획득',pending:'⏳ 검토중',rejected:'✕ 반려',none:'미제출'};
+  $('mission-list').innerHTML=missions.map(m=>{
+    const st=submissions[m.id]?.status||'none';
+    return`<div class="card ${sc[st]||''}" style="cursor:pointer" onclick="openMission('${m.id}')">
+      <span class="m-icon">${m.icon||'📸'}</span>
+      <div class="m-title">${m.title}</div>
+      <div class="m-desc">${m.description||''}</div>
+      <span class="badge ${bc[st]}">${bl[st]}</span>
+      ${m.teamOnly?'<span class="badge b-team">모둠 미션</span>':''}
+    </div>`;
+  }).join('');
+}
+
+window.openMission=missionId=>{
+  const m=missions.find(x=>x.id===missionId),sub=submissions[missionId],st=sub?.status||'none';
+  let html=`<span class="m-icon">${m.icon||'📸'}</span><div class="m-title">${m.title}</div><div class="m-desc">${m.description||''}</div>`;
+  if(st==='approved'){
+    html+=`<div style="text-align:center;padding:20px 0;font-size:52px">🏆</div><p style="text-align:center;font-size:14px;color:var(--green);font-weight:700">도장 획득 완료!</p>`;
+  }else if(st==='pending'){
+    html+=`<img class="preview-img" src="${sub.photoURL}" style="display:block"><div class="badge b-wait" style="margin-top:4px">⏳ 선생님 확인 중입니다</div>`;
+  }else{
+    if(st==='rejected'&&sub.rejectReason)html+=`<div class="rej-msg">💬 ${sub.rejectReason}</div>`;
+    if(st==='rejected')html+=`<p style="font-size:13px;color:rgba(26,26,46,.6);margin-bottom:10px">다시 사진을 찍어 제출하세요</p>`;
+    html+=`<img class="preview-img" id="prev-${missionId}">
+      <div class="upload-area">
+        <input type="file" accept="image/*" capture="environment" onchange="previewFile(event,'${missionId}')">
+        <span style="font-size:28px;display:block;margin-bottom:6px">📷</span>
+        <p>사진을 탭해서 선택하거나<br>카메라로 바로 찍기</p>
+      </div>
+      <button class="btn btn-success" style="margin-top:12px;display:none" id="submit-btn-${missionId}" onclick="submitMission('${missionId}')">🏆 제출하기</button>`;
+  }
+  $('detail-card').innerHTML=html;pendingFile=null;showScreen('detail');
+};
+
+let pendingFile=null;
+window.previewFile=(e,missionId)=>{
+  const file=e.target.files[0];if(!file)return;
+  pendingFile=file;
+  const img=$(`prev-${missionId}`);img.src=URL.createObjectURL(file);img.style.display='block';
+  $(`submit-btn-${missionId}`).style.display='block';
+};
+
+window.submitMission=async missionId=>{
+  if(!pendingFile){toast('사진을 먼저 선택해 주세요');return;}
+  showLoading('사진 업로드 중...');
+  try{
+    /* ── Cloudinary 업로드 ── */
+    const formData=new FormData();
+    formData.append('file',pendingFile);
+    formData.append('upload_preset',CLOUDINARY_PRESET);
+    formData.append('folder',`fieldtrip/${userProfile.uid}`);
+    const res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`,{method:'POST',body:formData});
+    if(!res.ok)throw new Error('Cloudinary 업로드 실패');
+    const data=await res.json();
+    const photoURL=data.secure_url;
+    /* ── Firestore에 제출 기록 저장 ── */
+    await addDoc(collection(db,'submissions'),{uid:userProfile.uid,displayName:userProfile.displayName,teamId:userProfile.teamId,teamName:userProfile.teamName||userProfile.teamId,missionId,photoURL,status:'pending',rejectReason:'',createdAt:serverTimestamp()});
+    hideLoading();toast('제출 완료! 선생님이 곧 확인해 드릴게요 👍');showMissions();
+  }catch(e){hideLoading();toast('업로드 실패. 다시 시도해 주세요.');console.error(e);}
+};
+
+window.showMissions=()=>showScreen('missions');
+</script>
+</body>
+</html>
