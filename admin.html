@@ -63,23 +63,19 @@
   .field textarea{resize:vertical}
   .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .form-actions{display:flex;gap:8px;margin-top:12px}
-
-  /* 학생 계정 섹션 */
   .student-row{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
   .student-row:last-child{border-bottom:none}
   .s-info{flex:1}
   .s-name{font-size:14px;font-weight:700}
-  .s-email{font-size:11px;color:rgba(26,26,46,.5);margin-top:1px}
+  .s-sub{font-size:11px;color:rgba(26,26,46,.5);margin-top:1px}
   .s-team{font-size:11px;background:#e8f0fb;color:var(--accent2);padding:2px 8px;border-radius:12px;display:inline-block;margin-top:3px}
-
   .login-wrap{max-width:360px;margin:60px auto 0}
   .login-wrap h2{font-family:var(--fh);font-size:18px;text-align:center;margin-bottom:20px}
   .login-wrap .field{margin-bottom:10px}
-  .login-wrap .field label{display:block;font-size:11px;font-weight:700;margin-bottom:5px;letter-spacing:.5px;color:rgba(26,26,46,.6)}
+  .login-wrap .field label{display:block;font-size:11px;font-weight:700;margin-bottom:5px;color:rgba(26,26,46,.6)}
   .login-wrap input{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--paper);color:var(--ink);font-family:var(--fb)}
   .login-wrap input:focus{outline:none;border-color:var(--ink)}
   .err{font-size:12px;color:var(--accent);text-align:center;min-height:18px}
-
   .loading{position:fixed;inset:0;z-index:100;background:rgba(250,248,242,.88);display:none;align-items:center;justify-content:center;font-size:14px;gap:10px}
   .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 20px;border-radius:24px;font-size:13px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
@@ -93,12 +89,10 @@
   .photo-modal.show{display:flex}
   .photo-modal img{max-width:100%;max-height:85vh;border-radius:8px;object-fit:contain}
   .photo-modal .close{position:absolute;top:16px;right:20px;font-size:28px;color:#fff;cursor:pointer}
-  @keyframes spin{to{transform:rotate(360deg)}}
-
-  /* 비밀번호 표시 박스 */
   .pw-display{background:#fff8e6;border:1.5px solid var(--gold);border-radius:8px;padding:12px 16px;margin-top:12px;display:none}
   .pw-display p{font-size:12px;color:rgba(26,26,46,.6);margin-bottom:4px}
   .pw-display .pw-val{font-size:18px;font-weight:700;letter-spacing:2px;color:var(--ink)}
+  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -113,11 +107,14 @@
   <div id="screen-admin-login" class="screen active">
     <div class="login-wrap">
       <h2>🔐 관리자 로그인</h2>
-      <div class="field"><label>이메일</label>
+      <div class="field">
+        <label>이메일</label>
         <input id="admin-email" type="email" placeholder="teacher@school.kr" autocomplete="email">
       </div>
-      <div class="field" style="margin-top:10px"><label>비밀번호</label>
-        <input id="admin-pw" type="password" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()">
+      <div class="field" style="margin-top:10px">
+        <label>비밀번호</label>
+        <input id="admin-pw" type="password" placeholder="비밀번호"
+               onkeydown="if(event.key==='Enter')adminLogin()">
       </div>
       <p class="err" id="admin-err"></p>
       <button class="btn btn-primary" style="width:100%;padding:13px;margin-top:4px" onclick="adminLogin()">로그인</button>
@@ -136,30 +133,19 @@
       <button class="btn btn-outline" style="font-size:12px;padding:6px 14px" onclick="adminLogout()">로그아웃</button>
     </div>
 
-    <!-- 제출 확인 -->
-    <div id="tab-review" class="tab-pane active">
-      <div id="pending-list"><p class="empty">불러오는 중...</p></div>
-    </div>
-
-    <!-- 학생 계정 관리 -->
-    <div id="tab-students" class="tab-pane">
+    <div id="tab-review"    class="tab-pane active"><div id="pending-list"><p class="empty">불러오는 중...</p></div></div>
+    <div id="tab-students"  class="tab-pane">
       <div id="student-form-wrap"></div>
-      <div class="card" style="padding:0;overflow:hidden" id="student-list-card">
-        <div id="student-rows"><p class="empty">불러오는 중...</p></div>
-      </div>
+      <div class="card" style="padding:0;overflow:hidden"><div id="student-rows"><p class="empty">불러오는 중...</p></div></div>
       <button class="btn btn-primary" style="margin-top:12px;width:100%;padding:13px" onclick="openStudentForm()">+ 학생 계정 추가</button>
     </div>
-
-    <!-- 현황 대시보드 -->
     <div id="tab-dashboard" class="tab-pane">
       <div class="stats-grid" id="dash-stats"></div>
       <div class="card" style="padding:0;overflow:hidden">
         <div class="tbl-wrap"><table><thead><tr id="dash-thead"></tr></thead><tbody id="dash-tbody"></tbody></table></div>
       </div>
     </div>
-
-    <!-- 미션 편집 -->
-    <div id="tab-missions" class="tab-pane">
+    <div id="tab-missions"  class="tab-pane">
       <div id="mission-form-wrap"></div>
       <div class="card" style="padding:0;overflow:hidden"><div id="mission-rows"></div></div>
       <button class="btn btn-primary" style="margin-top:12px;width:100%;padding:13px" onclick="openMissionForm(null)">+ 미션 추가</button>
@@ -174,117 +160,141 @@
 </div>
 
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import{getFirestore,collection,doc,getDocs,getDoc,addDoc,updateDoc,deleteDoc,onSnapshot,query,where,orderBy,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import{getFunctions,httpsCallable}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-/* ★ Firebase 설정을 본인 것으로 교체하세요 ★ */
-const firebaseConfig={apiKey:"AIzaSyCVuWl_431EoKCnsjYId1aauxlWBrM9g8M",authDomain:"devteach1225.firebaseapp.com",projectId:"devteach1225",storageBucket:"devteach1225.appspot.com",messagingSenderId:"987549318245",appId:"1:987549318245:web:9aa42b0663dc93408b1a8c"};
+/* ★ Supabase 설정 ★ */
+const SUPABASE_URL = 'https://okybzhttuavzafhpoave.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reWJ6aHR0dWF2emFmaHBvYXZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2ODc4MzcsImV4cCI6MjA5MjI2MzgzN30.z9RhTa0chsWA3b3ZfNx7o9VwkMDP2y00qtbjOhnGJ7g';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
-const functions=getFunctions(app,'asia-northeast3');
+/* ── UI 헬퍼 ── */
+const $ = id => document.getElementById(id);
+let missions=[], students=[], teams=[], allSubs=[];
+let realtimeSub = null;
 
-/* ── 헬퍼 ── */
-const $=id=>document.getElementById(id);
-let missions=[],students=[],teams=[],allSubs=[];
-const showLoading=(m='')=>{$('loading').style.display='flex';$('lmsg').textContent=m||'잠시만요...'};
-const hideLoading=()=>$('loading').style.display='none';
-const toast=(msg,d=2400)=>{const e=$('toast');e.textContent=msg;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),d)};
-const tsStr=ts=>{if(!ts)return'-';const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleString('ko',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})};
+const showLoading = (m='') => { $('loading').style.display='flex'; $('lmsg').textContent=m||'잠시만요...'; };
+const hideLoading = () => $('loading').style.display='none';
+const toast = (msg,d=2400) => { const e=$('toast'); e.textContent=msg; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),d); };
+const tsStr = ts => { if(!ts) return '-'; return new Date(ts).toLocaleString('ko',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); };
+const unitLabel = { individual:'개인', team:'모둠', class:'학급' };
 
-/* ── Auth 상태 감시 — 자동 로그인 ── */
-onAuthStateChanged(auth, async user => {
-  if(user){
-    const isAdmin = await checkAdmin(user.uid);
-    if(isAdmin){
+/* ══════════════════════════════════════════
+   Auth 상태 감시 (자동 로그인)
+   ══════════════════════════════════════════ */
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (session) {
+    const { data } = await supabase
+      .from('admins')
+      .select('id')
+      .eq('id', session.user.id)
+      .single();
+
+    if (data) {
       $('screen-admin-login').classList.remove('active');
       $('screen-admin-main').classList.add('active');
       loadAdmin();
     } else {
-      await signOut(auth);
-      $('admin-err').textContent='관리자 권한이 없는 계정이에요.';
+      await supabase.auth.signOut();
+      $('admin-err').textContent = '관리자 권한이 없는 계정이에요.';
     }
   }
 });
 
-async function checkAdmin(uid){
-  try{
-    const snap = await getDoc(doc(db,'admins',uid));
-    return snap.exists();
-  }catch(e){ return false; }
-}
-
-window.adminLogin=async function(){
-  const email=$('admin-email').value.trim();
-  const pw=$('admin-pw').value;
-  $('admin-err').textContent='';
-  if(!email||!pw){$('admin-err').textContent='이메일과 비밀번호를 입력해 주세요.';return;}
+/* ══════════════════════════════════════════
+   관리자 로그인
+   ══════════════════════════════════════════ */
+window.adminLogin = async () => {
+  const email = $('admin-email').value.trim();
+  const pw    = $('admin-pw').value;
+  $('admin-err').textContent = '';
+  if (!email||!pw) { $('admin-err').textContent='이메일과 비밀번호를 입력해 주세요.'; return; }
   showLoading('로그인 중...');
-  try{
-    await signInWithEmailAndPassword(auth,email,pw);
-    // onAuthStateChanged 가 자동으로 관리자 확인 후 진입
-  }catch(e){
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
+  if (error) {
     hideLoading();
-    const m={
-      'auth/user-not-found':'등록되지 않은 이메일이에요.',
-      'auth/wrong-password':'비밀번호가 틀렸어요.',
-      'auth/invalid-credential':'이메일 또는 비밀번호를 확인해 주세요.',
-      'auth/too-many-requests':'잠시 후 다시 시도해 주세요.'
-    };
-    $('admin-err').textContent=m[e.code]||'로그인 실패. 다시 시도해 주세요.';
+    $('admin-err').textContent = error.message === 'Invalid login credentials'
+      ? '이메일 또는 비밀번호를 확인해 주세요.'
+      : '로그인 실패. 다시 시도해 주세요.';
   }
 };
 
-async function loadAdmin(){
+/* ══════════════════════════════════════════
+   초기 데이터 로드
+   Promise.all 로 3가지 동시에 불러오기
+   ══════════════════════════════════════════ */
+async function loadAdmin() {
   showLoading('데이터 불러오는 중...');
-  try{
-    const[mSnap,sSnap,tSnap]=await Promise.all([
-      getDocs(query(collection(db,'missions'),orderBy('order'))),
-      getDocs(collection(db,'users')),
-      getDocs(collection(db,'teams'))
+  try {
+    const [mRes, sRes, tRes] = await Promise.all([
+      supabase.from('missions').select('*').order('sort_order'),
+      supabase.from('users').select('*, teams(name)'),
+      supabase.from('teams').select('*').order('name')
     ]);
-    missions=mSnap.docs.map(d=>({id:d.id,...d.data()}));
-    students=sSnap.docs.map(d=>({id:d.id,...d.data()}));
-    teams=tSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    missions = mRes.data || [];
+    students = sRes.data || [];
+    teams    = tRes.data || [];
 
     renderStudentRows();
     renderMissionRows();
 
-    onSnapshot(query(collection(db,'submissions'),orderBy('createdAt','desc')),snap=>{
-      allSubs=snap.docs.map(d=>({id:d.id,...d.data()}));
-      renderPending();renderDashboard();
-    });
+    /* 실시간 구독: 제출 현황 자동 갱신 */
+    if (realtimeSub) supabase.removeChannel(realtimeSub);
+    realtimeSub = supabase
+      .channel('admin-submissions')
+      .on('postgres_changes', { event:'*', schema:'public', table:'submissions' }, loadAllSubs)
+      .subscribe();
+
+    await loadAllSubs();
     hideLoading();
-  }catch(e){hideLoading();toast('불러오기 실패');console.error(e);}
+  } catch(e) { hideLoading(); toast('불러오기 실패'); console.error(e); }
 }
 
-/* ── 탭 전환 ── */
-window.switchTab=name=>{
-  const names=['review','students','dashboard','missions'];
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',names[i]===name));
-  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+async function loadAllSubs() {
+  const { data } = await supabase
+    .from('submissions')
+    .select('*, users(display_name), missions(title), teams:users(team_id(name))')
+    .order('created_at', { ascending: false });
+  allSubs = data || [];
+  renderPending();
+  renderDashboard();
+}
+
+/* ══════════════════════════════════════════
+   탭 전환
+   ══════════════════════════════════════════ */
+window.switchTab = name => {
+  const names = ['review','students','dashboard','missions'];
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', names[i]===name));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   $('tab-'+name).classList.add('active');
 };
 
-/* ── 제출 확인 ── */
-function renderPending(){
-  const pending=allSubs.filter(s=>s.status==='pending');
-  if(!pending.length){$('pending-list').innerHTML='<p class="empty">검토할 제출이 없습니다 🎉</p>';return;}
-  $('pending-list').innerHTML=pending.map(s=>{
-    const m=missions.find(x=>x.id===s.missionId);
-    return`<div class="card" id="sub-${s.id}">
+/* ══════════════════════════════════════════
+   제출 확인
+   ══════════════════════════════════════════ */
+function renderPending() {
+  const pending = allSubs.filter(s => s.status === 'pending');
+  if (!pending.length) { $('pending-list').innerHTML='<p class="empty">검토할 제출이 없습니다 🎉</p>'; return; }
+
+  $('pending-list').innerHTML = pending.map(s => {
+    const teamName = s.users?.team_id?.name || '-';
+    const studentName = s.users?.display_name || '-';
+    const missionTitle = s.missions?.title || s.mission_id;
+    return `<div class="card" id="sub-${s.id}">
       <div class="card-header">
-        <div class="avatar">${(s.teamName||s.teamId||'?').slice(0,2)}</div>
-        <div class="card-meta"><h3>${s.teamName||s.teamId} · ${s.displayName}</h3><p>${m?.title||s.missionId} · ${tsStr(s.createdAt)}</p></div>
+        <div class="avatar">${teamName.slice(0,2)}</div>
+        <div class="card-meta">
+          <h3>${teamName} · ${studentName}</h3>
+          <p>${missionTitle} · ${tsStr(s.created_at)}</p>
+        </div>
         <span class="badge b-wait">대기중</span>
       </div>
-      <img class="photo-box" src="${s.photoURL}" onclick="openPhoto('${s.photoURL}')">
+      <img class="photo-box" src="${s.photo_url}" onclick="openPhoto('${s.photo_url}')">
       <div class="action-row">
         <button class="btn btn-success" onclick="approve('${s.id}')">🏆 도장 승인</button>
-        <button class="btn btn-danger" onclick="toggleReject('${s.id}')">✕ 반려</button>
+        <button class="btn btn-danger"  onclick="toggleReject('${s.id}')">✕ 반려</button>
       </div>
       <div class="reject-section" id="rej-${s.id}">
         <textarea rows="2" placeholder="반려 사유 (선택 — 학생 화면에 표시됩니다)" id="rejmsg-${s.id}"></textarea>
@@ -294,58 +304,93 @@ function renderPending(){
   }).join('');
 }
 
-window.approve=async id=>{
+/* 도장 승인 */
+window.approve = async id => {
   showLoading('승인 중...');
-  await updateDoc(doc(db,'submissions',id),{status:'approved',reviewedAt:serverTimestamp()});
-  hideLoading();toast('✅ 도장 승인 완료!');
-};
-window.toggleReject=id=>{const el=$('rej-'+id);el.style.display=el.style.display==='block'?'none':'block';};
-window.reject=async id=>{
-  const reason=$('rejmsg-'+id).value.trim();
-  showLoading('반려 처리 중...');
-  await updateDoc(doc(db,'submissions',id),{status:'rejected',rejectReason:reason||'',reviewedAt:serverTimestamp()});
-  hideLoading();toast('반려 처리되었습니다');
+  await supabase.from('submissions').update({
+    status:      'approved',
+    reviewed_at: new Date().toISOString()
+  }).eq('id', id);
+  hideLoading(); toast('✅ 도장 승인 완료!');
 };
 
-/* ── 대시보드 ── */
-function renderDashboard(){
-  const approved=allSubs.filter(s=>s.status==='approved').length;
-  const pending=allSubs.filter(s=>s.status==='pending').length;
-  $('dash-stats').innerHTML=`
+/* 반려 섹션 토글 */
+window.toggleReject = id => {
+  const el = $('rej-'+id);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+};
+
+/* 반려 처리 */
+window.reject = async id => {
+  const reason = $('rejmsg-'+id).value.trim();
+  showLoading('반려 처리 중...');
+  await supabase.from('submissions').update({
+    status:        'rejected',
+    reject_reason: reason || '',
+    reviewed_at:   new Date().toISOString()
+  }).eq('id', id);
+  hideLoading(); toast('반려 처리되었습니다');
+};
+
+/* ══════════════════════════════════════════
+   대시보드
+   ══════════════════════════════════════════ */
+function renderDashboard() {
+  const approved = allSubs.filter(s => s.status === 'approved').length;
+  const pending  = allSubs.filter(s => s.status === 'pending').length;
+
+  $('dash-stats').innerHTML = `
     <div class="stat"><div class="stat-num">${students.length}</div><div class="stat-label">참여 학생</div></div>
     <div class="stat"><div class="stat-num" style="color:var(--green)">${approved}</div><div class="stat-label">승인된 도장</div></div>
     <div class="stat"><div class="stat-num" style="color:var(--gold)">${pending}</div><div class="stat-label">검토 대기</div></div>`;
 
-  $('dash-thead').innerHTML=`<th>학생</th><th>모둠</th>`+missions.map(m=>`<th style="text-align:center">${m.icon||'📸'}</th>`).join('')+`<th style="text-align:center">도장</th>`;
-  $('dash-tbody').innerHTML=students.map(st=>{
-    const sSubs=allSubs.filter(s=>s.uid===st.id);
-    const cells=missions.map(m=>{const sub=sSubs.find(s=>s.missionId===m.id);const ico={approved:'🏆',pending:'⏳',rejected:'✕'};return`<td class="cell-c">${ico[sub?.status]||'—'}</td>`;}).join('');
-    const stamped=sSubs.filter(s=>s.status==='approved').length;
-    return`<tr><td style="font-weight:700">${st.displayName}</td><td style="font-size:12px;color:rgba(26,26,46,.6)">${st.teamName||st.teamId||'-'}</td>${cells}<td class="cell-c" style="font-weight:700;color:var(--green)">${stamped}</td></tr>`;
+  $('dash-thead').innerHTML = `<th>학생</th><th>모둠</th>` +
+    missions.map(m => `<th style="text-align:center">${m.icon||'📸'}</th>`).join('') +
+    `<th style="text-align:center">도장</th>`;
+
+  $('dash-tbody').innerHTML = students.map(st => {
+    const sSubs  = allSubs.filter(s => s.uid === st.id);
+    const cells  = missions.map(m => {
+      const sub = sSubs.find(s => s.mission_id === m.id);
+      const ico = { approved:'🏆', pending:'⏳', rejected:'✕' };
+      return `<td class="cell-c">${ico[sub?.status]||'—'}</td>`;
+    }).join('');
+    const stamped = sSubs.filter(s => s.status === 'approved').length;
+    return `<tr>
+      <td style="font-weight:700">${st.display_name}</td>
+      <td style="font-size:12px;color:rgba(26,26,46,.6)">${st.teams?.name || '-'}</td>
+      ${cells}
+      <td class="cell-c" style="font-weight:700;color:var(--green)">${stamped}</td>
+    </tr>`;
   }).join('');
 }
 
-/* ── 학생 계정 관리 ── */
-function renderStudentRows(){
-  $('student-rows').innerHTML=students.length?students.map(s=>`
+/* ══════════════════════════════════════════
+   학생 계정 관리
+   Supabase Auth API로 직접 계정 생성 가능!
+   Firebase Functions 불필요
+   ══════════════════════════════════════════ */
+function renderStudentRows() {
+  $('student-rows').innerHTML = students.length ? students.map(s => `
     <div class="student-row">
-      <div class="avatar" style="font-size:11px">${(s.displayName||'?').slice(0,2)}</div>
+      <div class="avatar" style="font-size:11px">${(s.display_name||'?').slice(0,2)}</div>
       <div class="s-info">
-        <div class="s-name">${s.displayName}</div>
-        <div class="s-email">PIN: ${s.pin||'미설정'}</div>
-        <span class="s-team">${s.teamName||s.teamId||'모둠 미배정'}</span>
+        <div class="s-name">${s.display_name}</div>
+        <div class="s-sub">PIN: ${s.pin||'미설정'}</div>
+        <span class="s-team">${s.teams?.name || '모둠 미배정'}</span>
       </div>
-      <button class="btn btn-outline" onclick='openEditStudent(${JSON.stringify({id:s.id,displayName:s.displayName,email:s.email||"",teamId:s.teamId||"",teamName:s.teamName||""})})'>편집</button>
-      <button class="btn btn-outline" style="color:var(--accent);border-color:var(--accent)" onclick="deleteStudent('${s.id}')">삭제</button>
-    </div>`).join(''):'<p class="empty">등록된 학생이 없습니다</p>';
+      <button class="btn btn-outline"
+        onclick='openEditStudent(${JSON.stringify({id:s.id, display_name:s.display_name, pin:s.pin||"", team_id:s.team_id||""})})'>편집</button>
+      <button class="btn btn-outline" style="color:var(--accent);border-color:var(--accent)"
+        onclick="deleteStudent('${s.id}')">삭제</button>
+    </div>`).join('') : '<p class="empty">등록된 학생이 없습니다</p>';
 }
 
-/* PIN 4자리 자동생성 (1000~9999) */
-function genPIN(){ return String(Math.floor(Math.random()*9000)+1000); }
+function genPIN() { return String(Math.floor(Math.random()*9000)+1000); }
 
-window.openStudentForm=()=>{
-  const pin=genPIN();
-  $('student-form-wrap').innerHTML=`
+window.openStudentForm = () => {
+  const pin = genPIN();
+  $('student-form-wrap').innerHTML = `
     <div class="form-card">
       <h4>✚ 학생 계정 추가</h4>
       <div class="form-row">
@@ -353,15 +398,14 @@ window.openStudentForm=()=>{
         <div class="field"><label>모둠</label>
           <select id="sf-team">
             <option value="">모둠 선택</option>
-            ${teams.map(t=>`<option value="${t.id}" data-name="${t.displayName||t.code}">${t.displayName||t.code}</option>`).join('')}
+            ${teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}
           </select>
         </div>
       </div>
       <div class="field">
-        <label>PIN 번호 (4~6자리 숫자 — 직접 수정 가능)</label>
+        <label>PIN 번호 (4~6자리 숫자)</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <input id="sf-pin" type="text" inputmode="numeric"
-                 value="${pin}" maxlength="6"
+          <input id="sf-pin" type="text" inputmode="numeric" value="${pin}" maxlength="6"
                  style="font-size:20px;font-weight:700;letter-spacing:4px;flex:1">
           <button class="btn btn-outline" style="white-space:nowrap"
                   onclick="document.getElementById('sf-pin').value=genPIN()">🔀 재생성</button>
@@ -378,16 +422,65 @@ window.openStudentForm=()=>{
     </div>`;
 };
 
-window.openEditStudent=s=>{
-  $('student-form-wrap').innerHTML=`
+/* 학생 계정 생성
+   Supabase의 signUp API 사용 → Firebase Functions 불필요! */
+window.saveStudent = async () => {
+  const name    = $('sf-name').value.trim();
+  const pin     = $('sf-pin').value.trim();
+  const team_id = $('sf-team').value || null;
+
+  if (!name) { toast('이름을 입력하세요'); return; }
+  if (!pin || !/^\d{4,6}$/.test(pin)) { toast('PIN은 숫자 4~6자리로 입력하세요'); return; }
+
+  const email = encodeURIComponent(name) + '@stepquest.app';
+  showLoading('계정 생성 중...');
+  try {
+    /* Supabase Auth에 계정 생성
+       Firebase의 createUserWithEmailAndPassword 와 동일
+       단, Firebase Functions 없이 클라이언트에서 직접 가능! */
+    const { data: authData, error: authErr } = await supabase.auth.signUp({
+      email,
+      password: pin,
+      options: { data: { display_name: name } } // Auth 메타데이터
+    });
+
+    if (authErr) throw authErr;
+
+    /* users 테이블에 프로필 저장 */
+    const { error: profileErr } = await supabase.from('users').insert({
+      id:           authData.user.id,
+      display_name: name,
+      pin,
+      team_id
+    });
+
+    if (profileErr) throw profileErr;
+
+    /* 목록 갱신 */
+    const { data: sData } = await supabase.from('users').select('*, teams(name)');
+    students = sData || [];
+    renderStudentRows();
+
+    $('pw-display').style.display = 'block';
+    $('pw-display-val').textContent = `이름: ${name}  /  PIN: ${pin}`;
+    hideLoading(); toast('✅ 계정 생성 완료!');
+  } catch(e) {
+    hideLoading();
+    toast('계정 생성 실패: ' + e.message);
+    console.error(e);
+  }
+};
+
+window.openEditStudent = s => {
+  $('student-form-wrap').innerHTML = `
     <div class="form-card">
       <h4>✏️ 학생 정보 편집</h4>
       <div class="form-row">
-        <div class="field"><label>학생 이름</label><input id="sf-name" value="${s.displayName}"></div>
+        <div class="field"><label>학생 이름</label><input id="sf-name" value="${s.display_name}"></div>
         <div class="field"><label>모둠</label>
           <select id="sf-team">
             <option value="">모둠 없음</option>
-            ${teams.map(t=>`<option value="${t.id}" data-name="${t.displayName||t.code}" ${s.teamId===t.id?'selected':''}>${t.displayName||t.code}</option>`).join('')}
+            ${teams.map(t=>`<option value="${t.id}" ${s.team_id===t.id?'selected':''}>${t.name}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -403,86 +496,81 @@ window.openEditStudent=s=>{
     </div>`;
 };
 
-window.saveStudent=async()=>{
-  const name=$('sf-name').value.trim();
-  const pin=$('sf-pin').value.trim();
-  const teamSel=$('sf-team');
-  const teamId=teamSel.value;
-  const teamName=teamSel.selectedOptions[0]?.dataset.name||'';
-  if(!name){toast('이름을 입력하세요');return;}
-  if(!pin||!/^\d{4,6}$/.test(pin)){toast('PIN은 숫자 4~6자리로 입력하세요');return;}
-  /* 이름 → Firebase Auth 이메일 자동 변환
-     예: 홍길동 → 홍길동@stepquest.app
-     학생은 이 이메일을 알 필요 없음 */
-  const email=encodeURIComponent(name)+'@stepquest.app';
-  showLoading('계정 생성 중...');
-  try{
-    const createUser=httpsCallable(functions,'createStudentAccount');
-    const result=await createUser({email,password:pin,displayName:name,teamId,teamName});
-    const uid=result.data.uid;
-    await addDoc(collection(db,'users'),{uid,displayName:name,email,pin,teamId,teamName,createdAt:serverTimestamp()});
-    const sSnap=await getDocs(collection(db,'users'));
-    students=sSnap.docs.map(d=>({id:d.id,...d.data()}));
-    renderStudentRows();
-    $('pw-display').style.display='block';
-    $('pw-display-val').textContent=`이름: ${name}  /  PIN: ${pin}`;
-    hideLoading();toast('✅ 계정 생성 완료!');
-  }catch(e){
-    hideLoading();
-    if(e.code==='functions/not-found'||e.message?.includes('NOT_FOUND')){
-      toast('⚠️ Functions 미설정 — Firebase 콘솔에서 직접 계정을 만들어 주세요');
-    }else{toast('계정 생성 실패: '+e.message);}
-    console.error(e);
-  }
-};
+window.updateStudent = async id => {
+  const name    = $('sf-name').value.trim();
+  const pin     = $('sf-pin').value.trim();
+  const team_id = $('sf-team').value || null;
 
-window.updateStudent=async id=>{
-  const name=$('sf-name').value.trim();
-  const pin=$('sf-pin').value.trim();
-  const teamSel=$('sf-team');const teamId=teamSel.value;const teamName=teamSel.selectedOptions[0]?.dataset.name||'';
-  if(!name){toast('이름을 입력하세요');return;}
-  if(pin&&!/^\d{4,6}$/.test(pin)){toast('PIN은 숫자 4~6자리로 입력하세요');return;}
+  if (!name) { toast('이름을 입력하세요'); return; }
+  if (pin && !/^\d{4,6}$/.test(pin)) { toast('PIN은 숫자 4~6자리로 입력하세요'); return; }
+
   showLoading();
-  const updateData={displayName:name,teamId,teamName};
-  if(pin) updateData.pin=pin; // PIN 입력 시에만 업데이트
-  await updateDoc(doc(db,'users',id),updateData);
-  const sSnap=await getDocs(collection(db,'users'));
-  students=sSnap.docs.map(d=>({id:d.id,...d.data()}));
-  $('student-form-wrap').innerHTML='';renderStudentRows();hideLoading();
-  toast(pin?'✅ 저장되었습니다 (PIN 변경됨)':'✅ 저장되었습니다');
+  const updateData = { display_name: name, team_id };
+  if (pin) updateData.pin = pin;
+
+  await supabase.from('users').update(updateData).eq('id', id);
+
+  const { data: sData } = await supabase.from('users').select('*, teams(name)');
+  students = sData || [];
+  $('student-form-wrap').innerHTML = '';
+  renderStudentRows();
+  hideLoading();
+  toast(pin ? '✅ 저장되었습니다 (PIN 변경됨)' : '✅ 저장되었습니다');
 };
 
-window.deleteStudent=async id=>{
-  if(!confirm('학생 계정을 삭제할까요?'))return;
-  showLoading();await deleteDoc(doc(db,'users',id));
-  students=students.filter(s=>s.id!==id);renderStudentRows();hideLoading();toast('삭제되었습니다');
+window.deleteStudent = async id => {
+  if (!confirm('학생 계정을 삭제할까요?')) return;
+  showLoading();
+  /* users 테이블 삭제 (on delete cascade로 auth.users도 연동 삭제) */
+  await supabase.from('users').delete().eq('id', id);
+  students = students.filter(s => s.id !== id);
+  renderStudentRows();
+  hideLoading(); toast('삭제되었습니다');
 };
 
-/* ── 미션 편집 ── */
-function renderMissionRows(){
-  $('mission-rows').innerHTML=missions.length?missions.map(m=>`
+/* ══════════════════════════════════════════
+   미션 편집
+   ══════════════════════════════════════════ */
+function renderMissionRows() {
+  $('mission-rows').innerHTML = missions.length ? missions.map(m => `
     <div class="me-row">
       <span class="me-icon">${m.icon||'📸'}</span>
-      <div class="me-info"><div class="me-title">${m.title}</div><div class="me-sub">${m.teamOnly?'모둠 미션':'개인/모둠'} · ${m.active?'활성':'비활성'}</div></div>
-      <button class="btn btn-outline" onclick='openMissionForm(${JSON.stringify({id:m.id,title:m.title,description:m.description||"",icon:m.icon||"📸",teamOnly:!!m.teamOnly,order:m.order,active:m.active!==false})})'>편집</button>
-      <button class="btn btn-outline" style="color:var(--accent);border-color:var(--accent)" onclick="deleteMission('${m.id}')">삭제</button>
-    </div>`).join(''):'<p class="empty">미션이 없습니다</p>';
+      <div class="me-info">
+        <div class="me-title">${m.title}</div>
+        <div class="me-sub">${unitLabel[m.unit]||'개인'} 미션 · ${m.active?'활성':'비활성'}</div>
+      </div>
+      <button class="btn btn-outline"
+        onclick='openMissionForm(${JSON.stringify({id:m.id,title:m.title,description:m.description||"",icon:m.icon||"📸",unit:m.unit||"individual",sort_order:m.sort_order,active:m.active!==false})})'>편집</button>
+      <button class="btn btn-outline" style="color:var(--accent);border-color:var(--accent)"
+        onclick="deleteMission('${m.id}')">삭제</button>
+    </div>`).join('') : '<p class="empty">미션이 없습니다</p>';
 }
 
-window.openMissionForm=m=>{
-  const isNew=!m;
-  $('mission-form-wrap').innerHTML=`
+window.openMissionForm = m => {
+  const isNew = !m;
+  $('mission-form-wrap').innerHTML = `
     <div class="form-card">
-      <h4>${isNew?'✚ 새 미션 추가':'✏️ 미션 편집'}</h4>
+      <h4>${isNew ? '✚ 새 미션 추가' : '✏️ 미션 편집'}</h4>
       <div class="field"><label>미션 이름</label><input id="mf-title" value="${m?.title||''}"></div>
       <div class="field"><label>설명</label><textarea id="mf-desc" rows="2">${m?.description||''}</textarea></div>
       <div class="form-row">
         <div class="field"><label>이모지 아이콘</label><input id="mf-icon" value="${m?.icon||'📸'}" maxlength="2"></div>
-        <div class="field"><label>순서</label><input id="mf-order" type="number" value="${m?.order||missions.length+1}"></div>
+        <div class="field"><label>순서</label><input id="mf-order" type="number" value="${m?.sort_order||missions.length+1}"></div>
       </div>
       <div class="form-row">
-        <div class="field"><label>참여 단위</label><select id="mf-team"><option value="false" ${!m?.teamOnly?'selected':''}>개인/모둠 모두</option><option value="true" ${m?.teamOnly?'selected':''}>모둠 단위만</option></select></div>
-        <div class="field"><label>상태</label><select id="mf-active"><option value="true" ${m?.active!==false?'selected':''}>활성</option><option value="false" ${m?.active===false?'selected':''}>비활성</option></select></div>
+        <div class="field"><label>참여 단위</label>
+          <select id="mf-unit">
+            <option value="individual" ${m?.unit==='individual'||!m?'selected':''}>개인</option>
+            <option value="team"       ${m?.unit==='team'      ?'selected':''}>모둠</option>
+            <option value="class"      ${m?.unit==='class'     ?'selected':''}>학급</option>
+          </select>
+        </div>
+        <div class="field"><label>상태</label>
+          <select id="mf-active">
+            <option value="true"  ${m?.active!==false?'selected':''}>활성</option>
+            <option value="false" ${m?.active===false ?'selected':''}>비활성</option>
+          </select>
+        </div>
       </div>
       <div class="form-actions">
         <button class="btn btn-primary" style="flex:1" onclick="saveMission('${m?.id||''}')">저장</button>
@@ -491,35 +579,53 @@ window.openMissionForm=m=>{
     </div>`;
 };
 
-window.saveMission=async id=>{
-  const data={title:$('mf-title').value.trim(),description:$('mf-desc').value.trim(),icon:$('mf-icon').value.trim()||'📸',order:parseInt($('mf-order').value)||99,teamOnly:$('mf-team').value==='true',active:$('mf-active').value==='true'};
-  if(!data.title){toast('미션 이름을 입력하세요');return;}
+window.saveMission = async id => {
+  const data = {
+    title:       $('mf-title').value.trim(),
+    description: $('mf-desc').value.trim(),
+    icon:        $('mf-icon').value.trim() || '📸',
+    sort_order:  parseInt($('mf-order').value) || 99,
+    unit:        $('mf-unit').value,
+    active:      $('mf-active').value === 'true'
+  };
+  if (!data.title) { toast('미션 이름을 입력하세요'); return; }
   showLoading('저장 중...');
-  if(id)await updateDoc(doc(db,'missions',id),data);
-  else await addDoc(collection(db,'missions'),data);
-  const mSnap=await getDocs(query(collection(db,'missions'),orderBy('order')));
-  missions=mSnap.docs.map(d=>({id:d.id,...d.data()}));
-  $('mission-form-wrap').innerHTML='';renderMissionRows();hideLoading();toast('✅ 저장되었습니다');
+
+  if (id) {
+    await supabase.from('missions').update(data).eq('id', id);
+  } else {
+    await supabase.from('missions').insert(data);
+  }
+
+  const { data: mData } = await supabase.from('missions').select('*').order('sort_order');
+  missions = mData || [];
+  $('mission-form-wrap').innerHTML = '';
+  renderMissionRows();
+  hideLoading(); toast('✅ 저장되었습니다');
 };
 
-window.deleteMission=async id=>{
-  if(!confirm('미션을 삭제할까요?'))return;
-  showLoading();await deleteDoc(doc(db,'missions',id));
-  missions=missions.filter(m=>m.id!==id);renderMissionRows();hideLoading();toast('삭제되었습니다');
+window.deleteMission = async id => {
+  if (!confirm('미션을 삭제할까요?')) return;
+  showLoading();
+  await supabase.from('missions').delete().eq('id', id);
+  missions = missions.filter(m => m.id !== id);
+  renderMissionRows();
+  hideLoading(); toast('삭제되었습니다');
 };
 
 /* ── 관리자 로그아웃 ── */
-window.adminLogout=async()=>{
-  await signOut(auth);
+window.adminLogout = async () => {
+  if (realtimeSub) { supabase.removeChannel(realtimeSub); realtimeSub = null; }
+  await supabase.auth.signOut();
   $('screen-admin-main').classList.remove('active');
   $('screen-admin-login').classList.add('active');
-  $('admin-email').value='';$('admin-pw').value='';
+  $('admin-email').value = ''; $('admin-pw').value = '';
 };
 
 /* ── 사진 모달 ── */
-window.openPhoto=url=>{$('modal-img').src=url;$('photo-modal').classList.add('show');};
-window.closePhoto=()=>$('photo-modal').classList.remove('show');
-window.$=$;
+window.openPhoto  = url => { $('modal-img').src=url; $('photo-modal').classList.add('show'); };
+window.closePhoto = ()  => $('photo-modal').classList.remove('show');
+window.$ = $;
 </script>
 </body>
 </html>
