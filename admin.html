@@ -160,7 +160,7 @@
 </div>
 
 <script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 /* ★ Supabase 설정 ★ */
 const SUPABASE_URL = 'https://okybzhttuavzafhpoave.supabase.co';
@@ -238,6 +238,7 @@ async function loadAdmin() {
 
     renderStudentRows();
     renderMissionRows();
+    renderTeamRows();
 
     /* 실시간 구독: 제출 현황 자동 갱신 */
     if (realtimeSub) supabase.removeChannel(realtimeSub);
@@ -265,7 +266,7 @@ async function loadAllSubs() {
    탭 전환
    ══════════════════════════════════════════ */
 window.switchTab = name => {
-  const names = ['review','students','dashboard','missions'];
+  const names = ['review','students','dashboard','missions','teams'];
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', names[i]===name));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   $('tab-'+name).classList.add('active');
@@ -612,6 +613,7 @@ window.deleteMission = async id => {
   renderMissionRows();
   hideLoading(); toast('삭제되었습니다');
 };
+
 
 /* ── 관리자 로그아웃 ── */
 window.adminLogout = async () => {
