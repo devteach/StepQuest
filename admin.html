@@ -128,7 +128,6 @@
       <button class="tab-btn" onclick="switchTab('students')">👤 학생 계정</button>
       <button class="tab-btn" onclick="switchTab('dashboard')">📊 현황</button>
       <button class="tab-btn" onclick="switchTab('missions')">✏️ 미션</button>
-      <button class="tab-btn" onclick="switchTab('teams')">👥 모둠</button>
     </div>
     <div style="text-align:right;margin-bottom:12px">
       <button class="btn btn-outline" style="font-size:12px;padding:6px 14px" onclick="adminLogout()">로그아웃</button>
@@ -150,11 +149,6 @@
       <div id="mission-form-wrap"></div>
       <div class="card" style="padding:0;overflow:hidden"><div id="mission-rows"></div></div>
       <button class="btn btn-primary" style="margin-top:12px;width:100%;padding:13px" onclick="openMissionForm(null)">+ 미션 추가</button>
-    </div>    
-    <div id="tab-teams" class="tab-pane">
-      <div id="team-form-wrap"></div>
-      <div class="card" style="padding:0;overflow:hidden"><div id="team-rows"><p class="empty">불러오는 중...</p></div></div>
-      <button class="btn btn-primary" style="margin-top:12px;width:100%;padding:13px" onclick="openTeamForm()">+ 모둠 추가</button>
     </div>
   </div>
 </div>
@@ -244,7 +238,6 @@ async function loadAdmin() {
 
     renderStudentRows();
     renderMissionRows();
-    renderTeamRows();
 
     /* 실시간 구독: 제출 현황 자동 갱신 */
     if (realtimeSub) supabase.removeChannel(realtimeSub);
@@ -272,7 +265,7 @@ async function loadAllSubs() {
    탭 전환
    ══════════════════════════════════════════ */
 window.switchTab = name => {
-  const names = ['review','students','dashboard','missions','teams'];
+  const names = ['review','students','dashboard','missions'];
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', names[i]===name));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   $('tab-'+name).classList.add('active');
@@ -618,80 +611,6 @@ window.deleteMission = async id => {
   missions = missions.filter(m => m.id !== id);
   renderMissionRows();
   hideLoading(); toast('삭제되었습니다');
-};
-
-/* ══════════════════════════════════════════
-   모둠 관리
-   ══════════════════════════════════════════ */
-function renderTeamRows() {
-  $('team-rows').innerHTML = teams.length ? teams.map(t => `
-    <div class="me-row">
-      <div class="avatar" style="font-size:11px">${t.name.slice(0,2)}</div>
-      <div class="me-info">
-        <div class="me-title">${t.name}</div>
-        <div class="me-sub">학생 ${students.filter(s=>s.team_id===t.id).length}명</div>
-      </div>
-      <button class="btn btn-outline" onclick='openTeamEdit(${JSON.stringify({id:t.id,name:t.name})})'>편집</button>
-      <button class="btn btn-outline" style="color:var(--accent);border-color:var(--accent)"
-        onclick="deleteTeam('${t.id}')">삭제</button>
-    </div>`).join('') : '<p class="empty">등록된 모둠이 없습니다</p>';
-}
-
-window.openTeamForm = () => {
-  $('team-form-wrap').innerHTML = `
-    <div class="form-card">
-      <h4>✚ 모둠 추가</h4>
-      <div class="field"><label>모둠 이름</label><input id="tf-name" placeholder="예: 1모둠"></div>
-      <div class="form-actions">
-        <button class="btn btn-primary" style="flex:1" onclick="saveTeam('')">추가</button>
-        <button class="btn btn-outline" onclick="$('team-form-wrap').innerHTML=''">취소</button>
-      </div>
-    </div>`;
-  document.getElementById('tf-name').focus();
-};
-
-window.openTeamEdit = t => {
-  $('team-form-wrap').innerHTML = `
-    <div class="form-card">
-      <h4>✏️ 모둠 편집</h4>
-      <div class="field"><label>모둠 이름</label><input id="tf-name" value="${t.name}"></div>
-      <div class="form-actions">
-        <button class="btn btn-primary" style="flex:1" onclick="saveTeam('${t.id}')">저장</button>
-        <button class="btn btn-outline" onclick="$('team-form-wrap').innerHTML=''">취소</button>
-      </div>
-    </div>`;
-};
-
-window.saveTeam = async id => {
-  const name = $('tf-name').value.trim();
-  if (!name) { toast('모둠 이름을 입력하세요'); return; }
-  showLoading();
-  if (id) {
-    await supabase.from('teams').update({ name }).eq('id', id);
-  } else {
-    await supabase.from('teams').insert({ name });
-  }
-  const { data } = await supabase.from('teams').select('*').order('name');
-  teams = data || [];
-  $('team-form-wrap').innerHTML = '';
-  renderTeamRows();
-  hideLoading();
-  toast(id ? '✅ 모둠 이름이 변경되었습니다' : '✅ 모둠이 추가되었습니다');
-};
-
-window.deleteTeam = async id => {
-  const memberCount = students.filter(s => s.team_id === id).length;
-  if (memberCount > 0) {
-    if (!confirm(`이 모둠에 학생 ${memberCount}명이 있어요.\n삭제하면 해당 학생들의 모둠이 해제돼요. 계속할까요?`)) return;
-  } else {
-    if (!confirm('모둠을 삭제할까요?')) return;
-  }
-  showLoading();
-  await supabase.from('teams').delete().eq('id', id);
-  teams = teams.filter(t => t.id !== id);
-  renderTeamRows();
-  hideLoading();
-  toast('삭제되었습니다');
 };
 
 /* ── 관리자 로그아웃 ── */
