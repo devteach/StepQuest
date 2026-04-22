@@ -238,7 +238,6 @@ async function loadAdmin() {
 
     renderStudentRows();
     renderMissionRows();
-    renderTeamRows();
 
     /* 실시간 구독: 제출 현황 자동 갱신 */
     if (realtimeSub) supabase.removeChannel(realtimeSub);
@@ -266,7 +265,7 @@ async function loadAllSubs() {
    탭 전환
    ══════════════════════════════════════════ */
 window.switchTab = name => {
-  const names = ['review','students','dashboard','missions','teams'];
+  const names = ['review','students','dashboard','missions'];
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', names[i]===name));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   $('tab-'+name).classList.add('active');
