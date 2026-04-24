@@ -254,7 +254,7 @@ async function loadAdmin() {
 async function loadAllSubs() {
   const { data } = await supabase
     .from('submissions')
-    .select('*, users(display_name), missions(title), teams:users(team_id(name))')
+    .select('*, users(name), missions(title), teams:users(team_id(name))')
     .order('created_at', { ascending: false });
   allSubs = data || [];
   renderPending();
@@ -280,7 +280,7 @@ function renderPending() {
 
   $('pending-list').innerHTML = pending.map(s => {
     const teamName = s.users?.team_id?.name || '-';
-    const studentName = s.users?.display_name || '-';
+    const studentName = s.users?.name || '-';
     const missionTitle = s.missions?.title || s.mission_id;
     return `<div class="card" id="sub-${s.id}">
       <div class="card-header">
@@ -357,7 +357,7 @@ function renderDashboard() {
     }).join('');
     const stamped = sSubs.filter(s => s.status === 'approved').length;
     return `<tr>
-      <td style="font-weight:700">${st.display_name}</td>
+      <td style="font-weight:700">${st.name}</td>
       <td style="font-size:12px;color:rgba(26,26,46,.6)">${st.teams?.name || '-'}</td>
       ${cells}
       <td class="cell-c" style="font-weight:700;color:var(--green)">${stamped}</td>
@@ -373,14 +373,14 @@ function renderDashboard() {
 function renderStudentRows() {
   $('student-rows').innerHTML = students.length ? students.map(s => `
     <div class="student-row">
-      <div class="avatar" style="font-size:11px">${(s.display_name||'?').slice(0,2)}</div>
+      <div class="avatar" style="font-size:11px">${(s.name||'?').slice(0,2)}</div>
       <div class="s-info">
-        <div class="s-name">${s.display_name}</div>
+        <div class="s-name">${s.name}</div>
         <div class="s-sub">PIN: ${s.pin||'미설정'}</div>
         <span class="s-team">${s.teams?.name || '모둠 미배정'}</span>
       </div>
       <button class="btn btn-outline"
-        onclick='openEditStudent(${JSON.stringify({id:s.id, display_name:s.display_name, pin:s.pin||"", team_id:s.team_id||""})})'>편집</button>
+        onclick='openEditStudent(${JSON.stringify({id:s.id, name:s.name, pin:s.pin||"", team_id:s.team_id||""})})'>편집</button>
       <button class="btn btn-outline" style="color:var(--accent);border-color:var(--accent)"
         onclick="deleteStudent('${s.id}')">삭제</button>
     </div>`).join('') : '<p class="empty">등록된 학생이 없습니다</p>';
@@ -441,7 +441,7 @@ window.saveStudent = async () => {
     const { data: authData, error: authErr } = await supabase.auth.signUp({
       email,
       password: pin,
-      options: { data: { display_name: name } } // Auth 메타데이터
+      options: { data: { name: name } } // Auth 메타데이터
     });
 
     if (authErr) throw authErr;
@@ -449,7 +449,7 @@ window.saveStudent = async () => {
     /* users 테이블에 프로필 저장 */
     const { error: profileErr } = await supabase.from('users').insert({
       id:           authData.user.id,
-      display_name: name,
+      name: name,
       pin,
       team_id
     });
@@ -476,7 +476,7 @@ window.openEditStudent = s => {
     <div class="form-card">
       <h4>✏️ 학생 정보 편집</h4>
       <div class="form-row">
-        <div class="field"><label>학생 이름</label><input id="sf-name" value="${s.display_name}"></div>
+        <div class="field"><label>학생 이름</label><input id="sf-name" value="${s.name}"></div>
         <div class="field"><label>모둠</label>
           <select id="sf-team">
             <option value="">모둠 없음</option>
@@ -505,7 +505,7 @@ window.updateStudent = async id => {
   if (pin && !/^\d{4,6}$/.test(pin)) { toast('PIN은 숫자 4~6자리로 입력하세요'); return; }
 
   showLoading();
-  const updateData = { display_name: name, team_id };
+  const updateData = { name: name, team_id };
   if (pin) updateData.pin = pin;
 
   await supabase.from('users').update(updateData).eq('id', id);
