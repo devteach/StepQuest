@@ -70,8 +70,8 @@
 <body>
 <div class="wrap">
   <header class="app-header">
-    <span class="emoji">🚶‍➡️🏅🚶</span>
-    <h1>걸어서 만나는 퀘스트</h1>
+    <span class="emoji">🏅</span>
+    <h1>StepQuest</h1>
     <p class="sub" id="trip-name">잠시만요...</p>
     <div id="chip-wrap" style="display:none"><span class="team-chip" id="chip-text"></span></div>
   </header>
@@ -126,28 +126,8 @@ const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const CLOUD_NAME    = 'doaj5mitt';
 const CLOUD_PRESET  = 'StepQuest';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    persistSession:     true,
-    storageKey:         'stepquest-auth',
-    autoRefreshToken:   true,
-    detectSessionInUrl: false,
-    storage:            window.localStorage
-  }
-});
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* 페이지 로드 시 저장된 세션 복원 */
-(async () => {
-  const saved = localStorage.getItem('stepquest-auth');
-  if (saved) {
-    try {
-      const { access_token, refresh_token } = JSON.parse(saved);
-      if (access_token && refresh_token) {
-        await supabase.auth.setSession({ access_token, refresh_token });
-      }
-    } catch(e) { console.log('세션 복원 실패', e); }
-  }
-})();
 
 /* ── 상태 ── */
 let userProfile = null;
@@ -167,10 +147,22 @@ const toast = (msg, dur=2400) => {
 const unitLabel = { individual:'개인 미션', team:'모둠 미션', class:'학급 미션' };
 
 /* ── Auth 상태 감시 ── */
-supabase.auth.onAuthStateChange(async (event, session) => {
+/* 앱 시작 시 기존 세션 확인 후 처리 */
+(async () => {
+  const { data: { session } } = await supabase.auth.getSession();
   if (session) {
     await afterLogin(session.user);
   } else {
+    showScreen('login');
+    hideLoading();
+  }
+})();
+
+/* 로그인/로그아웃 상태 변화 감지 */
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    await afterLogin(session.user);
+  } else if (event === 'SIGNED_OUT') {
     showScreen('login');
     hideLoading();
   }
