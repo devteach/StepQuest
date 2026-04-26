@@ -70,8 +70,8 @@
 <body>
 <div class="wrap">
   <header class="app-header">
-    <span class="emoji">🏅</span>
-    <h1>StepQuest</h1>
+    <span class="emoji">🚶‍➡️🏅🚶</span>
+    <h1>걸어서 만나는 퀘스트</h1>
     <p class="sub" id="trip-name">잠시만요...</p>
     <div id="chip-wrap" style="display:none"><span class="team-chip" id="chip-text"></span></div>
   </header>
@@ -131,9 +131,23 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
     persistSession:     true,
     storageKey:         'stepquest-auth',
     autoRefreshToken:   true,
-    detectSessionInUrl: false
+    detectSessionInUrl: false,
+    storage:            window.localStorage
   }
 });
+
+/* 페이지 로드 시 저장된 세션 복원 */
+(async () => {
+  const saved = localStorage.getItem('stepquest-auth');
+  if (saved) {
+    try {
+      const { access_token, refresh_token } = JSON.parse(saved);
+      if (access_token && refresh_token) {
+        await supabase.auth.setSession({ access_token, refresh_token });
+      }
+    } catch(e) { console.log('세션 복원 실패', e); }
+  }
+})();
 
 /* ── 상태 ── */
 let userProfile = null;
