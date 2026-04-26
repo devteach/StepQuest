@@ -169,28 +169,8 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 /* ── 설정 ── */
 const SUPABASE_URL = 'https://riomypiymsssaevfhmks.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpb215cGl5bXNzc2FldmZobWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNzc5MTEsImV4cCI6MjA5Mjc1MzkxMX0.am6PrXOvnqLt4APZI49Yw6hoAZxdMQr6YRD7ujV12RE';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    persistSession:     true,
-    storageKey:         'stepquest-auth',
-    autoRefreshToken:   true,
-    detectSessionInUrl: false,
-    storage:            window.localStorage
-  }
-});
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* 페이지 로드 시 저장된 세션 복원 */
-(async () => {
-  const saved = localStorage.getItem('stepquest-auth');
-  if (saved) {
-    try {
-      const { access_token, refresh_token } = JSON.parse(saved);
-      if (access_token && refresh_token) {
-        await supabase.auth.setSession({ access_token, refresh_token });
-      }
-    } catch(e) { console.log('세션 복원 실패', e); }
-  }
-})();
 
 /* ── 상태 ── */
 let missions=[], students=[], teams=[], allSubs=[];
@@ -209,7 +189,9 @@ const unitLabel = { individual:'개인', team:'모둠', class:'학급' };
 function genPIN() { return String(Math.floor(Math.random()*9000)+1000); }
 
 /* ── Auth 상태 감시 ── */
-supabase.auth.onAuthStateChange(async (event, session) => {
+/* 앱 시작 시 기존 세션 확인 */
+(async () => {
+  const { data: { session } } = await supabase.auth.getSession();
   if (session) {
     const { data } = await supabase.from('admins').select('id').eq('id', session.user.id).single();
     if (data) {
@@ -220,6 +202,24 @@ supabase.auth.onAuthStateChange(async (event, session) => {
       await supabase.auth.signOut();
       $('admin-err').textContent = '관리자 권한이 없는 계정이에요.';
     }
+  }
+})();
+
+/* 로그인/로그아웃 상태 변화 감지 */
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    const { data } = await supabase.from('admins').select('id').eq('id', session.user.id).single();
+    if (data) {
+      $('screen-login').classList.remove('active');
+      $('screen-main').classList.add('active');
+      loadAdmin();
+    } else {
+      await supabase.auth.signOut();
+      $('admin-err').textContent = '관리자 권한이 없는 계정이에요.';
+    }
+  } else if (event === 'SIGNED_OUT') {
+    $('screen-main').classList.remove('active');
+    $('screen-login').classList.add('active');
   }
 });
 
