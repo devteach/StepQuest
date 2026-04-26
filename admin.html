@@ -169,7 +169,14 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 /* ── 설정 ── */
 const SUPABASE_URL = 'https://riomypiymsssaevfhmks.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpb215cGl5bXNzc2FldmZobWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNzc5MTEsImV4cCI6MjA5Mjc1MzkxMX0.am6PrXOvnqLt4APZI49Yw6hoAZxdMQr6YRD7ujV12RE';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession:     true,
+    storageKey:         'stepquest-auth',
+    autoRefreshToken:   true,
+    detectSessionInUrl: false
+  }
+});
 
 /* ── 상태 ── */
 let missions=[], students=[], teams=[], allSubs=[];
