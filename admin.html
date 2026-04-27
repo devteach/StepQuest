@@ -73,6 +73,8 @@
   .photo-modal.show{display:flex}
   .photo-modal img{max-width:100%;max-height:85vh;border-radius:8px;object-fit:contain}
   .photo-modal .close{position:absolute;top:16px;right:20px;font-size:28px;color:#fff;cursor:pointer}
+  .sort-btn{padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;background:transparent;font-size:12px;font-weight:700;font-family:var(--fb);cursor:pointer;color:rgba(26,26,46,.5);transition:all .15s}
+  .sort-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -119,6 +121,12 @@
     <!-- 현황 대시보드 -->
     <div id="tab-dashboard" class="tab-pane">
       <div class="stats-grid" id="dash-stats"></div>
+      <!-- 정렬 버튼 -->
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="sort-btn active" onclick="setSort('name')"   id="sort-name">이름순</button>
+        <button class="sort-btn"        onclick="setSort('team')"   id="sort-team">모둠순</button>
+        <button class="sort-btn"        onclick="setSort('stamp')"  id="sort-stamp">도장순</button>
+      </div>
       <div class="card" style="padding:0;overflow:hidden">
         <div class="tbl-wrap">
           <table><thead><tr id="dash-thead"></tr></thead><tbody id="dash-tbody"></tbody></table>
@@ -143,6 +151,7 @@ const ADMIN_KEY = 'teacher2025'; /* ★ 반드시 변경하세요 ★ */
 const $ = id => document.getElementById(id);
 let missions=[], students=[], allSubs=[];
 let pollTimer = null;
+let sortBy = 'name'; // 정렬 기준: name / team / stamp
 
 const showLoading = (m='') => { $('loading').style.display='flex'; $('lmsg').textContent=m||'잠시만요...'; };
 const hideLoading = () => $('loading').style.display='none';
@@ -277,6 +286,14 @@ function renderStudentRows() {
     </div>`).join('') : '<p class="empty">등록된 학생이 없습니다</p>';
 }
 
+/* ── 정렬 기준 변경 ── */
+window.setSort = key => {
+  sortBy = key;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  $('sort-' + key).classList.add('active');
+  renderDashboard();
+};
+
 /* ── 현황 대시보드 ── */
 function renderDashboard() {
   const approved = allSubs.filter(s=>s.status==='승인').length;
@@ -291,7 +308,21 @@ function renderDashboard() {
     missions.map(m=>`<th style="text-align:center">${m.icon||'📸'}</th>`).join('') +
     `<th style="text-align:center">도장</th>`;
 
-  $('dash-tbody').innerHTML = students.map(st => {
+  /* 정렬 적용 */
+  const sorted = [...students].sort((a, b) => {
+    if (sortBy === 'name') {
+      return a.name.localeCompare(b.name, 'ko');
+    } else if (sortBy === 'team') {
+      return (a.teamName||'').localeCompare(b.teamName||'', 'ko');
+    } else if (sortBy === 'stamp') {
+      const aStamp = allSubs.filter(s => s.name===a.name && s.status==='승인').length;
+      const bStamp = allSubs.filter(s => s.name===b.name && s.status==='승인').length;
+      return bStamp - aStamp; // 도장 많은 순
+    }
+    return 0;
+  });
+
+  $('dash-tbody').innerHTML = sorted.map(st => {
     const sSubs = allSubs.filter(s => s.name===st.name);
     const cells = missions.map(m => {
       const sub = sSubs.find(s => s.missionId===m.id);
