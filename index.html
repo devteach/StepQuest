@@ -72,8 +72,10 @@
   <header class="app-header">
     <span class="emoji">🚶‍➡️ 🏅 🚶</span>
     <h1>걸어서 만나는 퀘스트</h1>
-    <p class="sub" id="trip-name">잠시만요...</p>
-    <div id="chip-wrap" style="display:none"><span class="team-chip" id="chip-text"></span></div>
+    <p class="sub" id="trip-name">StepQuest</p>
+    <div id="chip-wrap" style="display:none">
+      <span class="team-chip" id="chip-text"></span>
+    </div>
   </header>
 
   <!-- 로그인 -->
@@ -117,23 +119,18 @@
 <div class="loading" id="loading"><div class="spinner"></div><span id="lmsg">잠시만요...</span></div>
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
+<script>
 /* ── 설정 ── */
-const SUPABASE_URL = 'https://riomypiymsssaevfhmks.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpb215cGl5bXNzc2FldmZobWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNzc5MTEsImV4cCI6MjA5Mjc1MzkxMX0.am6PrXOvnqLt4APZI49Yw6hoAZxdMQr6YRD7ujV12RE';
-const CLOUD_NAME   = 'doaj5mitt';
-const CLOUD_PRESET = 'StepQuest';
-const SESSION_KEY  = 'sq_student'; // localStorage 저장 키
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const API     = 'https://stepquest-api.hialwl.workers.dev';
+const CLOUD   = 'doaj5mitt';
+const PRESET  = 'StepQuest';
+const SQ_KEY  = 'sq_user'; // localStorage 키
 
 /* ── 상태 ── */
 let userProfile = null;
 let missions    = [];
 let submissions = {};
-let realtimeSub = null;
+let pollTimer   = null;
 
 /* ── UI 헬퍼 ── */
 const $ = id => document.getElementById(id);
@@ -146,20 +143,28 @@ const toast = (msg, dur=2400) => {
 };
 const unitLabel = { individual:'개인 미션', team:'모둠 미션', class:'학급 미션' };
 
+/* ── API 호출 헬퍼 ── */
+async function api(path, options={}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options
+  });
+  return res.json();
+}
+
 /* ══════════════════════════════════════════
    앱 시작 시 자동 로그인
-   localStorage에 저장된 이름+PIN으로 자동 로그인
+   localStorage에 저장된 정보로 자동 로그인
    ══════════════════════════════════════════ */
 (async () => {
-  const saved = localStorage.getItem(SESSION_KEY);
+  const saved = localStorage.getItem(SQ_KEY);
   if (saved) {
     showLoading('자동 로그인 중...');
     try {
       const { name, pin } = JSON.parse(saved);
       await loginWithCredentials(name, pin);
     } catch(e) {
-      /* 자동 로그인 실패 시 저장 데이터 삭제 후 로그인 화면 */
-      localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(SQ_KEY);
       hideLoading();
       showScreen('login');
     }
@@ -190,109 +195,66 @@ window.doLogin = async () => {
 
 /* ── 실제 로그인 처리 ── */
 async function loginWithCredentials(name, pin) {
-  const email = encodeURIComponent(name) + '@stepquest.app';
+  const data = await api('/login', {
+    method: 'POST',
+    body: JSON.stringify({ name, pin })
+  });
 
-  /* Supabase Auth 로그인 */
-  const { error } = await supabase.auth.signInWithPassword({ email, password: pin });
-  if (error) {
-    localStorage.removeItem(SESSION_KEY); /* 실패 시 저장 데이터 삭제 */
-    const msg = {
-      'Invalid login credentials': '이름 또는 PIN 번호를 확인해 주세요.',
-      'Too many requests':         '잠시 후 다시 시도해 주세요.'
-    };
-    throw new Error(msg[error.message] || '로그인 실패. 다시 시도해 주세요.');
+  if (data.error) {
+    localStorage.removeItem(SQ_KEY);
+    throw new Error(data.error);
   }
 
-  /* 로그인 성공 → localStorage에 저장 (자동 로그인용) */
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ name, pin }));
+  /* 로그인 성공 → localStorage 저장 */
+  localStorage.setItem(SQ_KEY, JSON.stringify({ name, pin }));
+  userProfile = data;
 
-  await afterLogin(name, pin);
+  await loadApp();
 }
 
-/* ── 로그인 후 초기화 ── */
-async function afterLogin(name, pin) {
-  showLoading('정보 불러오는 중...');
+/* ── 앱 초기화 ── */
+async function loadApp() {
+  showLoading('미션 불러오는 중...');
 
-  /* Supabase Auth 세션 확인 */
-  const { data: { session } } = await supabase.auth.getSession();
-
-  /* 세션이 없으면 다시 로그인 */
-  if (!session) {
-    const email = encodeURIComponent(name) + '@stepquest.app';
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pin });
-    if (error) throw new Error('세션 복원 실패');
-  }
-
-  /* 학생 프로필 조회 */
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile, error: profileErr } = await supabase
-    .from('users')
-    .select('*, teams(name)')
-    .eq('id', user.id)
-    .single();
-
-  if (profileErr || !profile) {
-    localStorage.removeItem(SESSION_KEY);
-    hideLoading();
-    $('login-err').textContent = '계정 정보를 찾을 수 없어요. 선생님께 문의하세요.';
-    showScreen('login');
-    return;
-  }
-  userProfile = profile;
-
-  /* 앱 설정 */
-  const { data: configs } = await supabase.from('config').select('key, value');
-  if (configs) {
-    const cfg = Object.fromEntries(configs.map(c => [c.key, c.value]));
-    $('trip-name').textContent = (cfg.tripName||'') + (cfg.tripDate ? ' · '+cfg.tripDate : '');
-  } else {
-    $('trip-name').textContent = 'StepQuest';
-  }
-
-  /* 팀 칩 */
+  /* 팀 칩 표시 */
   $('chip-wrap').style.display = 'block';
-  $('chip-text').textContent = `${profile.teams?.name||'미배정'} · ${profile.name}`;
+  $('chip-text').textContent = `${userProfile.teamName||'미배정'} · ${userProfile.name}`;
 
-  /* 미션 목록 */
-  const { data: mData } = await supabase
-    .from('missions').select('*').eq('active', true).order('sort_order');
+  /* 미션 + 제출 현황 동시 로드 */
+  const [mData, sData] = await Promise.all([
+    api('/missions'),
+    api(`/submissions?uid=${userProfile.uid}`)
+  ]);
+
   missions = mData || [];
+  submissions = {};
+  (sData||[]).forEach(s => { submissions[s.missionId] = s; });
 
-  /* 제출 현황 */
-  await loadSubmissions(user.id);
-
-  /* 실시간 구독 */
-  startRealtime(user.id);
-
+  renderMissions();
   hideLoading();
   showScreen('missions');
+
+  /* 폴링 시작 (30초마다 제출 현황 갱신) */
+  startPolling();
 }
 
-/* ── 제출 현황 로드 ── */
-async function loadSubmissions(uid) {
-  const { data } = await supabase.from('submissions').select('*').eq('uid', uid);
-  submissions = {};
-  (data||[]).forEach(s => { submissions[s.mission_id] = s; });
-  renderMissions();
-}
-
-/* ── 실시간 구독 ── */
-function startRealtime(uid) {
-  if (realtimeSub) supabase.removeChannel(realtimeSub);
-  realtimeSub = supabase
-    .channel('my-submissions')
-    .on('postgres_changes', {
-      event:'*', schema:'public', table:'submissions',
-      filter:`uid=eq.${uid}`
-    }, () => loadSubmissions(uid))
-    .subscribe();
+/* ── 폴링 (실시간 대신) ── */
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    const sData = await api(`/submissions?uid=${userProfile.uid}`);
+    const prev  = JSON.stringify(submissions);
+    submissions  = {};
+    (sData||[]).forEach(s => { submissions[s.missionId] = s; });
+    /* 변화가 있을 때만 화면 갱신 */
+    if (JSON.stringify(submissions) !== prev) renderMissions();
+  }, 30000);
 }
 
 /* ── 로그아웃 ── */
-window.doLogout = async () => {
-  if (realtimeSub) { supabase.removeChannel(realtimeSub); realtimeSub=null; }
-  await supabase.auth.signOut();
-  localStorage.removeItem(SESSION_KEY); /* 자동 로그인 데이터 삭제 */
+window.doLogout = () => {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer=null; }
+  localStorage.removeItem(SQ_KEY);
   userProfile=null; missions=[]; submissions={};
   $('chip-wrap').style.display='none';
   $('inp-name').value=''; $('inp-pin').value='';
@@ -301,18 +263,18 @@ window.doLogout = async () => {
 
 /* ── 미션 목록 렌더링 ── */
 function renderMissions() {
-  const approved = missions.filter(m => submissions[m.id]?.status==='approved').length;
+  const approved = missions.filter(m => submissions[m.id]?.status==='승인').length;
   $('prog-text').textContent = `${approved} / ${missions.length}`;
   $('prog-bar').style.width  = missions.length ? `${(approved/missions.length)*100}%` : '0%';
 
   $('stamp-grid').innerHTML = missions.slice(0,8).map((m,i) => {
-    const ok = submissions[m.id]?.status==='approved';
+    const ok = submissions[m.id]?.status==='승인';
     return `<div class="stamp-box ${ok?'on':''}">${ok?'🏆':`<span style="font-size:12px;color:rgba(26,26,46,.25)">${i+1}</span>`}</div>`;
   }).join('');
 
-  const sc = { approved:'card-stamp-ok', pending:'card-stamp-wait', rejected:'card-stamp-rej' };
-  const bc = { approved:'b-ok', pending:'b-wait', rejected:'b-rej', none:'b-none' };
-  const bl = { approved:'✓ 도장 획득', pending:'⏳ 검토중', rejected:'✕ 반려', none:'미제출' };
+  const sc = { '승인':'card-stamp-ok', '대기중':'card-stamp-wait', '반려':'card-stamp-rej' };
+  const bc = { '승인':'b-ok', '대기중':'b-wait', '반려':'b-rej' };
+  const bl = { '승인':'✓ 도장 획득', '대기중':'⏳ 검토중', '반려':'✕ 반려' };
 
   $('mission-list').innerHTML = missions.map(m => {
     const st = submissions[m.id]?.status || 'none';
@@ -320,7 +282,7 @@ function renderMissions() {
       <span class="m-icon">${m.icon||'📸'}</span>
       <div class="m-title">${m.title}</div>
       <div class="m-desc">${m.description||''}</div>
-      <span class="badge ${bc[st]}">${bl[st]}</span>
+      <span class="badge ${bc[st]||'b-none'}">${bl[st]||'미제출'}</span>
       ${m.unit!=='individual'?`<span class="badge b-unit">${unitLabel[m.unit]||''}</span>`:''}
     </div>`;
   }).join('');
@@ -336,15 +298,15 @@ window.openMission = missionId => {
     <div class="m-title">${m.title}</div>
     <div class="m-desc">${m.description||''}</div>`;
 
-  if (st==='approved') {
+  if (st==='승인') {
     html += `<div style="text-align:center;padding:20px 0;font-size:52px">🏆</div>
       <p style="text-align:center;font-size:14px;color:var(--green);font-weight:700">도장 획득 완료!</p>`;
-  } else if (st==='pending') {
-    html += `<img class="preview-img" src="${sub.photo_url}" style="display:block">
+  } else if (st==='대기중') {
+    html += `<img class="preview-img" src="${sub.photoUrl}" style="display:block">
       <div class="badge b-wait" style="margin-top:4px">⏳ 선생님 확인 중입니다</div>`;
   } else {
-    if (st==='rejected' && sub.reject_reason) html += `<div class="rej-msg">💬 ${sub.reject_reason}</div>`;
-    if (st==='rejected') html += `<p style="font-size:13px;color:rgba(26,26,46,.6);margin-bottom:10px">다시 사진을 찍어 제출하세요</p>`;
+    if (st==='반려' && sub.rejectReason) html += `<div class="rej-msg">💬 ${sub.rejectReason}</div>`;
+    if (st==='반려') html += `<p style="font-size:13px;color:rgba(26,26,46,.6);margin-bottom:10px">다시 사진을 찍어 제출하세요</p>`;
     html += `<img class="preview-img" id="prev-${missionId}">
       <div class="upload-area">
         <input type="file" accept="image/*" capture="environment" onchange="previewFile(event,'${missionId}')">
@@ -374,27 +336,36 @@ window.submitMission = async missionId => {
   if (!pendingFile) { toast('사진을 먼저 선택해 주세요'); return; }
   showLoading('사진 업로드 중...');
   try {
+    /* Cloudinary 업로드 */
     const formData = new FormData();
     formData.append('file', pendingFile);
-    formData.append('upload_preset', CLOUD_PRESET);
-    formData.append('folder', `stepquest/${userProfile.id}`);
+    formData.append('upload_preset', PRESET);
+    formData.append('folder', `stepquest/${userProfile.uid}`);
 
     const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      `https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,
       { method:'POST', body:formData }
     );
     if (!res.ok) throw new Error('사진 업로드 실패');
     const { secure_url: photoUrl } = await res.json();
 
-    const { error } = await supabase.from('submissions').insert({
-      uid:           userProfile.id,
-      mission_id:    missionId,
-      photo_url:     photoUrl,
-      status:        'pending',
-      reject_reason: ''
+    /* Workers로 제출 기록 저장 */
+    const mission = missions.find(m => m.id===missionId);
+    const data = await api('/submissions', {
+      method: 'POST',
+      body: JSON.stringify({
+        uid:          userProfile.uid,
+        name:         userProfile.name,
+        teamName:     userProfile.teamName,
+        missionId:    missionId,
+        missionTitle: mission?.title || '',
+        photoUrl
+      })
     });
-    if (error) throw error;
 
+    if (data.error) throw new Error(data.error);
+
+    submissions[missionId] = data;
     hideLoading();
     toast('제출 완료! 선생님이 곧 확인해 드릴게요 👍');
     showMissions();
@@ -405,7 +376,7 @@ window.submitMission = async missionId => {
   }
 };
 
-window.showMissions = () => showScreen('missions');
+window.showMissions = () => { renderMissions(); showScreen('missions'); };
 </script>
 </body>
 </html>
