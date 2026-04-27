@@ -70,8 +70,8 @@
 <body>
 <div class="wrap">
   <header class="app-header">
-    <span class="emoji">🚶‍➡️ 🏅 🚶</span>
-    <h1>걸어서 만나는 퀘스트</h1>
+    <span class="emoji">🏅</span>
+    <h1>StepQuest</h1>
     <p class="sub" id="trip-name">StepQuest</p>
     <div id="chip-wrap" style="display:none">
       <span class="team-chip" id="chip-text"></span>
@@ -207,7 +207,7 @@ async function loginWithCredentials(name, pin) {
 
   /* 로그인 성공 → localStorage 저장 */
   localStorage.setItem(SQ_KEY, JSON.stringify({ name, pin }));
-  userProfile = data;
+  userProfile = data; // { name, teamName, pin }
 
   await loadApp();
 }
@@ -223,7 +223,7 @@ async function loadApp() {
   /* 미션 + 제출 현황 동시 로드 */
   const [mData, sData] = await Promise.all([
     api('/missions'),
-    api(`/submissions?uid=${userProfile.uid}`)
+    api(`/submissions?name=${encodeURIComponent(userProfile.name)}`)
   ]);
 
   missions = mData || [];
@@ -242,7 +242,7 @@ async function loadApp() {
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(async () => {
-    const sData = await api(`/submissions?uid=${userProfile.uid}`);
+    const sData = await api(`/submissions?name=${encodeURIComponent(userProfile.name)}`);
     const prev  = JSON.stringify(submissions);
     submissions  = {};
     (sData||[]).forEach(s => { submissions[s.missionId] = s; });
@@ -340,7 +340,7 @@ window.submitMission = async missionId => {
     const formData = new FormData();
     formData.append('file', pendingFile);
     formData.append('upload_preset', PRESET);
-    formData.append('folder', `stepquest/${userProfile.uid}`);
+    formData.append('folder', `stepquest/${encodeURIComponent(userProfile.name)}`);
 
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,
@@ -354,7 +354,6 @@ window.submitMission = async missionId => {
     const data = await api('/submissions', {
       method: 'POST',
       body: JSON.stringify({
-        uid:          userProfile.uid,
         name:         userProfile.name,
         teamName:     userProfile.teamName,
         missionId:    missionId,
