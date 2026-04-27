@@ -39,8 +39,8 @@
   .prog-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;color:rgba(26,26,46,.6)}
   .prog-track{height:8px;background:var(--paper2);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
   .prog-bar{height:100%;background:var(--gold);border-radius:4px;transition:width .4s}
-  .stamp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
-  .stamp-box{aspect-ratio:1;border:1.5px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--paper2)}
+  .stamp-grid{display:grid;grid-template-columns:repeat(16,1fr);gap:3px;margin-bottom:16px}
+  .stamp-box{aspect-ratio:1;border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;background:var(--paper2)}
   .stamp-box.on{background:#fff8e6;border-color:var(--gold)}
   .m-icon{font-size:22px;margin-bottom:8px;display:block}
   .m-title{font-family:var(--fh);font-size:15px;margin-bottom:4px;padding-right:38px}
@@ -148,7 +148,7 @@ const toast = (msg, dur=2400) => {
   const e=$('toast'); e.textContent=msg; e.classList.add('show');
   setTimeout(()=>e.classList.remove('show'), dur);
 };
-const unitLabel = { individual:'개인 미션', team:'모둠 미션', class:'학급 미션' };
+const unitLabel = { individual:'개인', team:'모둠', class:'학급' };
 
 /* ── API 호출 헬퍼 ── */
 async function api(path, options={}) {
@@ -283,9 +283,9 @@ function renderMissions() {
   $('prog-bar').style.width  = allMissions.length ? `${(approved/allMissions.length)*100}%` : '0%';
 
   /* 도장판: 전체 미션 기준 (최대 8칸) */
-  $('stamp-grid').innerHTML = allMissions.slice(0,8).map((m,i) => {
+  $('stamp-grid').innerHTML = allMissions.map((m,i) => {
     const ok = submissions[m.id]?.status==='승인';
-    return `<div class="stamp-box ${ok?'on':''}" title="${m.title}">${ok?'🏆':`<span style="font-size:12px;color:rgba(26,26,46,.25)">${i+1}</span>`}</div>`;
+    return `<div class="stamp-box ${ok?'on':''}" title="${m.title}">${ok?'🏆':`<span style="font-size:10px;color:rgba(26,26,46,.25)">${i+1}</span>`}</div>`;
   }).join('');
 
   const sc = { '승인':'card-stamp-ok', '대기중':'card-stamp-wait', '반려':'card-stamp-rej' };
@@ -299,7 +299,7 @@ function renderMissions() {
       <div class="m-title">${m.title}</div>
       <div class="m-desc">${m.description||''}</div>
       <span class="badge ${bc[st]||'b-none'}">${bl[st]||'미제출'}</span>
-      ${m.unit!=='individual'?`<span class="badge b-unit">${unitLabel[m.unit]||''}</span>`:''}
+      <span class="badge b-unit">${unitLabel[m.unit]||'개인 미션'}</span>
     </div>`;
   }).join('');
 }
