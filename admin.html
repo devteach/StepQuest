@@ -65,12 +65,11 @@
   .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .form-actions{display:flex;gap:8px;margin-top:12px}
   .s-tag{font-size:11px;background:#e8f0fb;color:var(--accent2);padding:2px 8px;border-radius:12px;display:inline-block;margin-top:3px}
-  .login-wrap{max-width:360px;margin:60px auto 0}
-  .login-wrap h2{font-family:var(--fh);font-size:18px;text-align:center;margin-bottom:20px}
-  .login-wrap .field label{display:block;font-size:11px;font-weight:700;margin-bottom:5px;color:rgba(26,26,46,.6)}
-  .login-wrap input{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--paper);color:var(--ink);font-family:var(--fb);margin-bottom:0}
-  .login-wrap input:focus{outline:none;border-color:var(--ink)}
-  .err{font-size:12px;color:var(--accent);text-align:center;min-height:18px;margin-top:6px}
+  /* 접근 거부 화면 */
+  .denied{text-align:center;padding:60px 20px}
+  .denied .icon{font-size:60px;margin-bottom:16px}
+  .denied h2{font-family:var(--fh);font-size:20px;margin-bottom:8px}
+  .denied p{font-size:14px;color:rgba(26,26,46,.5);line-height:1.7}
   .loading{position:fixed;inset:0;z-index:100;background:rgba(250,248,242,.88);display:none;align-items:center;justify-content:center;font-size:14px;gap:10px}
   .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 20px;border-radius:24px;font-size:13px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
@@ -98,21 +97,13 @@
     <p class="sub">선생님 전용 페이지</p>
   </header>
 
-  <!-- 로그인 -->
-  <div id="screen-login" class="screen active">
-    <div class="login-wrap">
-      <h2>🔐 관리자 로그인</h2>
-      <div class="field">
-        <label>이메일</label>
-        <input id="admin-email" type="email" placeholder="teacher@school.kr" autocomplete="email">
-      </div>
-      <div class="field" style="margin-top:10px">
-        <label>비밀번호</label>
-        <input id="admin-pw" type="password" placeholder="비밀번호"
-               onkeydown="if(event.key==='Enter')adminLogin()">
-      </div>
-      <p class="err" id="admin-err"></p>
-      <button class="btn btn-primary" style="width:100%;padding:13px;margin-top:8px" onclick="adminLogin()">로그인</button>
+  <!-- 접근 거부 화면 -->
+  <div id="screen-denied" class="screen active">
+    <div class="denied">
+      <div class="icon">🔐</div>
+      <h2>접근할 수 없어요</h2>
+      <p>올바른 URL로 접속해 주세요.<br>
+         예: admin.html?key=비밀번호</p>
     </div>
   </div>
 
@@ -123,9 +114,6 @@
       <button class="tab-btn" onclick="switchTab('students')">👤 학생</button>
       <button class="tab-btn" onclick="switchTab('missions')">🎯 미션</button>
       <button class="tab-btn" onclick="switchTab('dashboard')">📊 현황</button>
-    </div>
-    <div style="text-align:right;margin-bottom:12px">
-      <button class="btn btn-outline" style="font-size:12px;padding:6px 14px" onclick="adminLogout()">로그아웃</button>
     </div>
 
     <!-- 제출 확인 -->
@@ -165,12 +153,12 @@
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+const ADMIN_KEY = 'teacher2026';
 
-/* ── 설정 ── */
+/* ── Supabase 설정 ── */
 const SUPABASE_URL = 'https://riomypiymsssaevfhmks.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpb215cGl5bXNzc2FldmZobWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNzc5MTEsImV4cCI6MjA5Mjc1MzkxMX0.am6PrXOvnqLt4APZI49Yw6hoAZxdMQr6YRD7ujV12RE';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
 
 /* ── 상태 ── */
 let missions=[], students=[], teams=[], allSubs=[];
@@ -188,69 +176,27 @@ const tsStr = ts => ts ? new Date(ts).toLocaleString('ko',{month:'2-digit',day:'
 const unitLabel = { individual:'개인', team:'모둠', class:'학급' };
 function genPIN() { return String(Math.floor(Math.random()*9000)+1000); }
 
-/* ── Auth 상태 감시 ── */
-/* 앱 시작 시 기존 세션 확인 */
-(async () => {
-  console.log('세션 확인 시작');
-  const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
-  console.log('세션 결과:', session, sessionErr);
+/* ══════════════════════════════════════════
+   URL 파라미터로 접근 제어
+   admin.html?key=teacher2025 형태로 접속
+   새로고침해도 URL이 유지되어 재인증 불필요!
+   ══════════════════════════════════════════ */
+const urlKey = new URLSearchParams(window.location.search).get('key');
 
-  if (session) {
-    console.log('세션 있음, 관리자 확인 중:', session.user.id);
-    const { data, error } = await supabase.from('admins').select('id').eq('id', session.user.id).single();
-    console.log('관리자 확인 결과:', data, error);
+if (urlKey === ADMIN_KEY) {
+  /* 키가 맞으면 바로 관리자 화면 */
+  $('screen-denied').classList.remove('active');
+  $('screen-main').classList.add('active');
+  loadAdmin();
+} else {
+  /* 키가 없거나 틀리면 접근 거부 화면 */
+  $('screen-denied').classList.add('active');
+  hideLoading();
+}
 
-    if (data) {
-      console.log('관리자 확인 완료 → 메인 화면');
-      $('screen-login').classList.remove('active');
-      $('screen-main').classList.add('active');
-      loadAdmin();
-    } else {
-      console.log('관리자 아님 → 로그아웃');
-      await supabase.auth.signOut();
-      $('admin-err').textContent = '관리자 권한이 없는 계정이에요.';
-    }
-  } else {
-    console.log('세션 없음 → 로그인 화면');
-    hideLoading();
-  }
-})();
-
-/* 로그인/로그아웃 상태 변화 감지 */
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session) {
-    const { data } = await supabase.from('admins').select('id').eq('id', session.user.id).single();
-    if (data) {
-      $('screen-login').classList.remove('active');
-      $('screen-main').classList.add('active');
-      loadAdmin();
-    } else {
-      await supabase.auth.signOut();
-      $('admin-err').textContent = '관리자 권한이 없는 계정이에요.';
-    }
-  } else if (event === 'SIGNED_OUT') {
-    $('screen-main').classList.remove('active');
-    $('screen-login').classList.add('active');
-  }
-});
-
-/* ── 로그인 ── */
-window.adminLogin = async () => {
-  const email = $('admin-email').value.trim();
-  const pw    = $('admin-pw').value;
-  $('admin-err').textContent = '';
-  if (!email||!pw) { $('admin-err').textContent='이메일과 비밀번호를 입력해 주세요.'; return; }
-  showLoading('로그인 중...');
-  const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
-  if (error) {
-    hideLoading();
-    $('admin-err').textContent = error.message==='Invalid login credentials'
-      ? '이메일 또는 비밀번호를 확인해 주세요.'
-      : '로그인 실패. 다시 시도해 주세요.';
-  }
-};
-
-/* ── 데이터 로드 ── */
+/* ══════════════════════════════════════════
+   데이터 로드
+   ══════════════════════════════════════════ */
 async function loadAdmin() {
   showLoading('데이터 불러오는 중...');
   try {
@@ -443,7 +389,7 @@ window.saveStudent = async () => {
     if (profileErr) throw profileErr;
 
     const { data:sData } = await supabase.from('users').select('*, teams(name)');
-    students = sData||[];
+    students=sData||[];
     renderStudentRows();
     $('pw-box').style.display='block';
     $('pw-val').textContent=`이름: ${name}  /  PIN: ${pin}`;
@@ -498,73 +444,6 @@ window.deleteStudent = async id => {
   await supabase.from('users').delete().eq('id',id);
   students=students.filter(s=>s.id!==id);
   renderStudentRows(); hideLoading(); toast('삭제되었습니다');
-};
-
-/* ══════════════════════════════════════════
-   모둠 관리
-   ══════════════════════════════════════════ */
-function renderTeamRows() {
-  $('team-rows').innerHTML = teams.length ? teams.map(t=>`
-    <div class="list-row">
-      <div class="avatar" style="font-size:11px">${t.name.slice(0,2)}</div>
-      <div class="row-info"><div class="row-title">${t.name}</div></div>
-      <button class="btn btn-outline" onclick='openEditTeam(${JSON.stringify({id:t.id,name:t.name})})'>편집</button>
-      <button class="btn btn-outline" style="color:var(--accent);border-color:var(--accent)" onclick="deleteTeam('${t.id}')">삭제</button>
-    </div>`).join('') : '<p class="empty">등록된 모둠이 없습니다</p>';
-}
-
-window.openTeamForm = () => {
-  $('team-form-wrap').innerHTML=`
-    <div class="form-card">
-      <h4>✚ 모둠 추가</h4>
-      <div class="field"><label>모둠 이름</label><input id="tf-name" placeholder="예: 1모둠"></div>
-      <div class="form-actions">
-        <button class="btn btn-primary" style="flex:1" onclick="saveTeam()">추가</button>
-        <button class="btn btn-outline" onclick="$('team-form-wrap').innerHTML=''">취소</button>
-      </div>
-    </div>`;
-};
-
-window.saveTeam = async () => {
-  const name=$('tf-name').value.trim();
-  if (!name) { toast('모둠 이름을 입력하세요'); return; }
-  showLoading();
-  await supabase.from('teams').insert({ name });
-  const { data:tData } = await supabase.from('teams').select('*').order('name');
-  teams=tData||[];
-  $('team-form-wrap').innerHTML='';
-  renderTeamRows(); hideLoading(); toast('✅ 모둠 추가 완료!');
-};
-
-window.openEditTeam = t => {
-  $('team-form-wrap').innerHTML=`
-    <div class="form-card">
-      <h4>✏️ 모둠 편집</h4>
-      <div class="field"><label>모둠 이름</label><input id="tf-name" value="${t.name}"></div>
-      <div class="form-actions">
-        <button class="btn btn-primary" style="flex:1" onclick="updateTeam('${t.id}')">저장</button>
-        <button class="btn btn-outline" onclick="$('team-form-wrap').innerHTML=''">취소</button>
-      </div>
-    </div>`;
-};
-
-window.updateTeam = async id => {
-  const name=$('tf-name').value.trim();
-  if (!name) { toast('모둠 이름을 입력하세요'); return; }
-  showLoading();
-  await supabase.from('teams').update({ name }).eq('id',id);
-  const { data:tData } = await supabase.from('teams').select('*').order('name');
-  teams=tData||[];
-  $('team-form-wrap').innerHTML='';
-  renderTeamRows(); hideLoading(); toast('✅ 저장되었습니다');
-};
-
-window.deleteTeam = async id => {
-  if (!confirm('모둠을 삭제할까요?\n소속 학생의 모둠 정보가 초기화됩니다.')) return;
-  showLoading();
-  await supabase.from('teams').delete().eq('id',id);
-  teams=teams.filter(t=>t.id!==id);
-  renderTeamRows(); hideLoading(); toast('삭제되었습니다');
 };
 
 /* ══════════════════════════════════════════
@@ -638,15 +517,6 @@ window.deleteMission = async id => {
   await supabase.from('missions').delete().eq('id',id);
   missions=missions.filter(m=>m.id!==id);
   renderMissionRows(); hideLoading(); toast('삭제되었습니다');
-};
-
-/* ── 로그아웃 ── */
-window.adminLogout = async () => {
-  if (realtimeSub) { supabase.removeChannel(realtimeSub); realtimeSub=null; }
-  await supabase.auth.signOut();
-  $('screen-main').classList.remove('active');
-  $('screen-login').classList.add('active');
-  $('admin-email').value=''; $('admin-pw').value='';
 };
 
 /* ── 사진 모달 ── */
