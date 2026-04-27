@@ -70,8 +70,8 @@
 <body>
 <div class="wrap">
   <header class="app-header">
-    <span class="emoji">🏅</span>
-    <h1>StepQuest</h1>
+    <span class="emoji">🚶‍➡️ 🏅 🚶</span>
+    <h1>걸어서 만나는 퀘스트</h1>
     <p class="sub" id="trip-name">잠시만요...</p>
     <div id="chip-wrap" style="display:none"><span class="team-chip" id="chip-text"></span></div>
   </header>
@@ -121,13 +121,13 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
 /* ── 설정 ── */
-const SUPABASE_URL  = 'https://riomypiymsssaevfhmks.supabase.co';
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpb215cGl5bXNzc2FldmZobWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNzc5MTEsImV4cCI6MjA5Mjc1MzkxMX0.am6PrXOvnqLt4APZI49Yw6hoAZxdMQr6YRD7ujV12RE';
-const CLOUD_NAME    = 'doaj5mitt';
-const CLOUD_PRESET  = 'StepQuest';
+const SUPABASE_URL = 'https://riomypiymsssaevfhmks.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpb215cGl5bXNzc2FldmZobWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNzc5MTEsImV4cCI6MjA5Mjc1MzkxMX0.am6PrXOvnqLt4APZI49Yw6hoAZxdMQr6YRD7ujV12RE';
+const CLOUD_NAME   = 'doaj5mitt';
+const CLOUD_PRESET = 'StepQuest';
+const SESSION_KEY  = 'sq_student'; // localStorage 저장 키
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
 
 /* ── 상태 ── */
 let userProfile = null;
@@ -136,8 +136,8 @@ let submissions = {};
 let realtimeSub = null;
 
 /* ── UI 헬퍼 ── */
-const $          = id => document.getElementById(id);
-const showScreen = name => ['login','missions','detail'].forEach(s => $('screen-'+s).classList.toggle('active', s===name));
+const $ = id => document.getElementById(id);
+const showScreen  = name => ['login','missions','detail'].forEach(s => $('screen-'+s).classList.toggle('active', s===name));
 const showLoading = (m='') => { $('loading').style.display='flex'; $('lmsg').textContent=m||'잠시만요...'; };
 const hideLoading = () => $('loading').style.display='none';
 const toast = (msg, dur=2400) => {
@@ -146,29 +146,30 @@ const toast = (msg, dur=2400) => {
 };
 const unitLabel = { individual:'개인 미션', team:'모둠 미션', class:'학급 미션' };
 
-/* ── Auth 상태 감시 ── */
-/* 앱 시작 시 기존 세션 확인 후 처리 */
+/* ══════════════════════════════════════════
+   앱 시작 시 자동 로그인
+   localStorage에 저장된 이름+PIN으로 자동 로그인
+   ══════════════════════════════════════════ */
 (async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    await afterLogin(session.user);
+  const saved = localStorage.getItem(SESSION_KEY);
+  if (saved) {
+    showLoading('자동 로그인 중...');
+    try {
+      const { name, pin } = JSON.parse(saved);
+      await loginWithCredentials(name, pin);
+    } catch(e) {
+      /* 자동 로그인 실패 시 저장 데이터 삭제 후 로그인 화면 */
+      localStorage.removeItem(SESSION_KEY);
+      hideLoading();
+      showScreen('login');
+    }
   } else {
     showScreen('login');
     hideLoading();
   }
 })();
 
-/* 로그인/로그아웃 상태 변화 감지 */
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session) {
-    await afterLogin(session.user);
-  } else if (event === 'SIGNED_OUT') {
-    showScreen('login');
-    hideLoading();
-  }
-});
-
-/* ── 로그인 ── */
+/* ── 로그인 버튼 ── */
 window.doLogin = async () => {
   const name = $('inp-name').value.trim();
   const pin  = $('inp-pin').value.trim();
@@ -179,86 +180,97 @@ window.doLogin = async () => {
   if (!/^\d{4,6}$/.test(pin)) { $('login-err').textContent='PIN은 숫자 4~6자리예요.'; return; }
 
   showLoading('확인 중...');
-  const email = encodeURIComponent(name) + '@stepquest.app';
-  const { error } = await supabase.auth.signInWithPassword({ email, password: pin });
-
-  if (error) {
+  try {
+    await loginWithCredentials(name, pin);
+  } catch(e) {
     hideLoading();
+    $('login-err').textContent = e.message || '로그인 실패. 다시 시도해 주세요.';
+  }
+};
+
+/* ── 실제 로그인 처리 ── */
+async function loginWithCredentials(name, pin) {
+  const email = encodeURIComponent(name) + '@stepquest.app';
+
+  /* Supabase Auth 로그인 */
+  const { error } = await supabase.auth.signInWithPassword({ email, password: pin });
+  if (error) {
+    localStorage.removeItem(SESSION_KEY); /* 실패 시 저장 데이터 삭제 */
     const msg = {
       'Invalid login credentials': '이름 또는 PIN 번호를 확인해 주세요.',
       'Too many requests':         '잠시 후 다시 시도해 주세요.'
     };
-    $('login-err').textContent = msg[error.message] || '로그인 실패. 다시 시도해 주세요.';
+    throw new Error(msg[error.message] || '로그인 실패. 다시 시도해 주세요.');
   }
-};
+
+  /* 로그인 성공 → localStorage에 저장 (자동 로그인용) */
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ name, pin }));
+
+  await afterLogin(name, pin);
+}
 
 /* ── 로그인 후 초기화 ── */
-async function afterLogin(user) {
+async function afterLogin(name, pin) {
   showLoading('정보 불러오는 중...');
-  try {
-    console.log('afterLogin 시작:', user.id);
 
-    /* 학생 프로필 조회 */
-    const { data: profile, error: profileErr } = await supabase
-      .from('users')
-      .select('*, teams(name)')
-      .eq('id', user.id)
-      .single();
+  /* Supabase Auth 세션 확인 */
+  const { data: { session } } = await supabase.auth.getSession();
 
-    console.log('프로필 조회 결과:', profile, profileErr);
-
-    if (profileErr || !profile) {
-      console.log('프로필 없음 → 로그인 화면');
-      await supabase.auth.signOut();
-      hideLoading();
-      $('login-err').textContent = '계정 정보를 찾을 수 없어요. 선생님께 문의하세요.';
-      showScreen('login');
-      return;
-    }
-    userProfile = profile;
-
-    /* 앱 설정 조회 */
-    const { data: configs } = await supabase.from('config').select('key, value');
-    if (configs) {
-      const cfg = Object.fromEntries(configs.map(c => [c.key, c.value]));
-      $('trip-name').textContent = (cfg.tripName||'') + (cfg.tripDate ? ' · '+cfg.tripDate : '');
-    } else {
-      $('trip-name').textContent = 'StepQuest';
-    }
-
-    /* 팀 칩 */
-    $('chip-wrap').style.display = 'block';
-    $('chip-text').textContent = `${profile.teams?.name||'미배정'} · ${profile.name}`;
-
-    /* 미션 목록 */
-    const { data: mData } = await supabase
-      .from('missions')
-      .select('*')
-      .eq('active', true)
-      .order('sort_order');
-    missions = mData || [];
-
-    /* 내 제출 현황 */
-    await loadSubmissions(user.id);
-
-    /* 실시간 구독 */
-    startRealtime(user.id);
-
-    hideLoading();
-    showScreen('missions');
-  } catch(e) {
-    hideLoading();
-    toast('불러오기 실패. 새로고침 해주세요.');
-    console.error(e);
+  /* 세션이 없으면 다시 로그인 */
+  if (!session) {
+    const email = encodeURIComponent(name) + '@stepquest.app';
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pin });
+    if (error) throw new Error('세션 복원 실패');
   }
+
+  /* 학생 프로필 조회 */
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile, error: profileErr } = await supabase
+    .from('users')
+    .select('*, teams(name)')
+    .eq('id', user.id)
+    .single();
+
+  if (profileErr || !profile) {
+    localStorage.removeItem(SESSION_KEY);
+    hideLoading();
+    $('login-err').textContent = '계정 정보를 찾을 수 없어요. 선생님께 문의하세요.';
+    showScreen('login');
+    return;
+  }
+  userProfile = profile;
+
+  /* 앱 설정 */
+  const { data: configs } = await supabase.from('config').select('key, value');
+  if (configs) {
+    const cfg = Object.fromEntries(configs.map(c => [c.key, c.value]));
+    $('trip-name').textContent = (cfg.tripName||'') + (cfg.tripDate ? ' · '+cfg.tripDate : '');
+  } else {
+    $('trip-name').textContent = 'StepQuest';
+  }
+
+  /* 팀 칩 */
+  $('chip-wrap').style.display = 'block';
+  $('chip-text').textContent = `${profile.teams?.name||'미배정'} · ${profile.name}`;
+
+  /* 미션 목록 */
+  const { data: mData } = await supabase
+    .from('missions').select('*').eq('active', true).order('sort_order');
+  missions = mData || [];
+
+  /* 제출 현황 */
+  await loadSubmissions(user.id);
+
+  /* 실시간 구독 */
+  startRealtime(user.id);
+
+  hideLoading();
+  showScreen('missions');
 }
 
 /* ── 제출 현황 로드 ── */
 async function loadSubmissions(uid) {
-  const { data } = await supabase
-    .from('submissions')
-    .select('*')
-    .eq('uid', uid);
+  const { data } = await supabase.from('submissions').select('*').eq('uid', uid);
   submissions = {};
   (data||[]).forEach(s => { submissions[s.mission_id] = s; });
   renderMissions();
@@ -270,8 +282,8 @@ function startRealtime(uid) {
   realtimeSub = supabase
     .channel('my-submissions')
     .on('postgres_changes', {
-      event: '*', schema: 'public', table: 'submissions',
-      filter: `uid=eq.${uid}`
+      event:'*', schema:'public', table:'submissions',
+      filter:`uid=eq.${uid}`
     }, () => loadSubmissions(uid))
     .subscribe();
 }
@@ -280,6 +292,7 @@ function startRealtime(uid) {
 window.doLogout = async () => {
   if (realtimeSub) { supabase.removeChannel(realtimeSub); realtimeSub=null; }
   await supabase.auth.signOut();
+  localStorage.removeItem(SESSION_KEY); /* 자동 로그인 데이터 삭제 */
   userProfile=null; missions=[]; submissions={};
   $('chip-wrap').style.display='none';
   $('inp-name').value=''; $('inp-pin').value='';
@@ -361,7 +374,6 @@ window.submitMission = async missionId => {
   if (!pendingFile) { toast('사진을 먼저 선택해 주세요'); return; }
   showLoading('사진 업로드 중...');
   try {
-    /* Cloudinary 업로드 */
     const formData = new FormData();
     formData.append('file', pendingFile);
     formData.append('upload_preset', CLOUD_PRESET);
@@ -374,7 +386,6 @@ window.submitMission = async missionId => {
     if (!res.ok) throw new Error('사진 업로드 실패');
     const { secure_url: photoUrl } = await res.json();
 
-    /* Supabase에 제출 기록 저장 */
     const { error } = await supabase.from('submissions').insert({
       uid:           userProfile.id,
       mission_id:    missionId,
