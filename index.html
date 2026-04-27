@@ -128,7 +128,8 @@ const SQ_KEY  = 'sq_user'; // localStorage 키
 
 /* ── 상태 ── */
 let userProfile = null;
-let missions    = [];
+let missions    = [];  // 활성 미션 (화면에 표시)
+let allMissions = [];  // 전체 미션 (도장 계산용)
 let submissions = {};
 let pollTimer   = null;
 
@@ -226,13 +227,15 @@ async function loadApp() {
   $('chip-wrap').style.display = 'block';
   $('chip-text').textContent = `${userProfile.teamName||'미배정'} · ${userProfile.name}`;
 
-  /* 미션 + 제출 현황 동시 로드 */
-  const [mData, sData] = await Promise.all([
-    api('/missions'),
+  /* 활성 미션 + 전체 미션 + 제출 현황 동시 로드 */
+  const [mData, allMData, sData] = await Promise.all([
+    api('/missions'),           // 활성 미션만 (화면 표시용)
+    api('/missions?all=true'),  // 전체 미션 (도장 계산용)
     api(`/submissions?name=${encodeURIComponent(userProfile.name)}`)
   ]);
 
-  missions = mData || [];
+  missions    = mData    || [];
+  allMissions = allMData || [];
   submissions = {};
   (sData||[]).forEach(s => { submissions[s.missionId] = s; });
 
@@ -248,11 +251,16 @@ async function loadApp() {
 function startPolling() {
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(async () => {
-    const sData = await api(`/submissions?name=${encodeURIComponent(userProfile.name)}`);
+    const [mData, allMData, sData] = await Promise.all([
+      api('/missions'),
+      api('/missions?all=true'),
+      api(`/submissions?name=${encodeURIComponent(userProfile.name)}`)
+    ]);
     const prev  = JSON.stringify(submissions);
-    submissions  = {};
+    missions    = mData    || [];
+    allMissions = allMData || [];
+    submissions = {};
     (sData||[]).forEach(s => { submissions[s.missionId] = s; });
-    /* 변화가 있을 때만 화면 갱신 */
     if (JSON.stringify(submissions) !== prev) renderMissions();
   }, 30000);
 }
@@ -269,13 +277,15 @@ window.doLogout = () => {
 
 /* ── 미션 목록 렌더링 ── */
 function renderMissions() {
-  const approved = missions.filter(m => submissions[m.id]?.status==='승인').length;
-  $('prog-text').textContent = `${approved} / ${missions.length}`;
-  $('prog-bar').style.width  = missions.length ? `${(approved/missions.length)*100}%` : '0%';
+  /* 도장 현황: 전체 미션 기준으로 계산 */
+  const approved = allMissions.filter(m => submissions[m.id]?.status==='승인').length;
+  $('prog-text').textContent = `${approved} / ${allMissions.length}`;
+  $('prog-bar').style.width  = allMissions.length ? `${(approved/allMissions.length)*100}%` : '0%';
 
-  $('stamp-grid').innerHTML = missions.slice(0,8).map((m,i) => {
+  /* 도장판: 전체 미션 기준 (최대 8칸) */
+  $('stamp-grid').innerHTML = allMissions.slice(0,8).map((m,i) => {
     const ok = submissions[m.id]?.status==='승인';
-    return `<div class="stamp-box ${ok?'on':''}">${ok?'🏆':`<span style="font-size:12px;color:rgba(26,26,46,.25)">${i+1}</span>`}</div>`;
+    return `<div class="stamp-box ${ok?'on':''}" title="${m.title}">${ok?'🏆':`<span style="font-size:12px;color:rgba(26,26,46,.25)">${i+1}</span>`}</div>`;
   }).join('');
 
   const sc = { '승인':'card-stamp-ok', '대기중':'card-stamp-wait', '반려':'card-stamp-rej' };
