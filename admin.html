@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!--
+  StepQuest 관리자
+  접속: admin.html?key=teacher2025
+  ★ ADMIN_KEY 반드시 변경하세요 ★
+-->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -149,7 +154,7 @@ const ADMIN_KEY = 'teacher2025'; /* ★ 반드시 변경하세요 ★ */
 
 /* ── UI 헬퍼 ── */
 const $ = id => document.getElementById(id);
-let missions=[], students=[], allSubs=[];
+let missions=[], allMissions=[], students=[], allSubs=[];
 let pollTimer = null;
 let sortBy = 'name'; // 정렬 기준: name / team / stamp
 
@@ -191,12 +196,14 @@ window.switchTab = name => {
 async function loadAdmin() {
   showLoading('데이터 불러오는 중...');
   try {
-    const [mData, sData, stData] = await Promise.all([
-      api('/missions'),
+    const [mData, allMData, sData, stData] = await Promise.all([
+      api('/missions'),           // 활성 미션
+      api('/missions?all=true'),  // 전체 미션 (도장 계산용)
       api('/admin/submissions'),
       api('/admin/students')
     ]);
-    missions = mData  || [];
+    missions    = mData    || [];
+    allMissions = allMData || [];
     allSubs  = sData  || [];
     students = stData || [];
 
@@ -208,7 +215,14 @@ async function loadAdmin() {
     /* 30초마다 제출 현황 갱신 */
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(async () => {
-      allSubs = await api('/admin/submissions') || [];
+      const [mData, allMData, sData] = await Promise.all([
+        api('/missions'),
+        api('/missions?all=true'),
+        api('/admin/submissions')
+      ]);
+      missions    = mData    || [];
+      allMissions = allMData || [];
+      allSubs     = sData    || [];
       renderPending();
       renderDashboard();
     }, 30000);
@@ -304,8 +318,9 @@ function renderDashboard() {
     <div class="stat"><div class="stat-num" style="color:var(--green)">${approved}</div><div class="stat-label">승인된 도장</div></div>
     <div class="stat"><div class="stat-num" style="color:var(--gold)">${pending}</div><div class="stat-label">검토 대기</div></div>`;
 
+  /* 헤더: 전체 미션 기준 */
   $('dash-thead').innerHTML = `<th>학생</th><th>모둠</th>` +
-    missions.map(m=>`<th style="text-align:center">${m.icon||'📸'}</th>`).join('') +
+    allMissions.map(m=>`<th style="text-align:center" title="${m.title}">${m.icon||'📸'}${m.active?'':'<span style="opacity:.3">🔒</span>'}</th>`).join('') +
     `<th style="text-align:center">도장</th>`;
 
   /* 정렬 적용 */
@@ -317,14 +332,14 @@ function renderDashboard() {
     } else if (sortBy === 'stamp') {
       const aStamp = allSubs.filter(s => s.name===a.name && s.status==='승인').length;
       const bStamp = allSubs.filter(s => s.name===b.name && s.status==='승인').length;
-      return bStamp - aStamp; // 도장 많은 순
+      return bStamp - aStamp;
     }
     return 0;
   });
 
   $('dash-tbody').innerHTML = sorted.map(st => {
     const sSubs = allSubs.filter(s => s.name===st.name);
-    const cells = missions.map(m => {
+    const cells = allMissions.map(m => {
       const sub = sSubs.find(s => s.missionId===m.id);
       const ico = { '승인':'🏆', '대기중':'⏳', '반려':'✕' };
       return `<td class="cell-c">${ico[sub?.status]||'—'}</td>`;
