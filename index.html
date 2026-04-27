@@ -134,7 +134,13 @@ let pollTimer   = null;
 
 /* ── UI 헬퍼 ── */
 const $ = id => document.getElementById(id);
-const showScreen  = name => ['login','missions','detail'].forEach(s => $('screen-'+s).classList.toggle('active', s===name));
+const showScreen = (name, pushState=true) => {
+  ['login','missions','detail'].forEach(s => $('screen-'+s).classList.toggle('active', s===name));
+  /* 뒤로가기 지원: 화면 전환 시 브라우저 히스토리에 추가 */
+  if (pushState && name !== 'login') {
+    history.pushState({ screen: name }, '', '');
+  }
+};
 const showLoading = (m='') => { $('loading').style.display='flex'; $('lmsg').textContent=m||'잠시만요...'; };
 const hideLoading = () => $('loading').style.display='none';
 const toast = (msg, dur=2400) => {
@@ -319,6 +325,8 @@ window.openMission = missionId => {
   $('detail-card').innerHTML = html;
   pendingFile = null;
   showScreen('detail');
+  /* 뒤로가기 시 미션 목록으로 돌아올 수 있게 히스토리 추가 */
+  history.pushState({ screen: 'detail', missionId }, '', '');
 };
 
 /* ── 사진 미리보기 ── */
@@ -387,6 +395,13 @@ window.submitMission = async missionId => {
 };
 
 window.showMissions = () => { renderMissions(); showScreen('missions'); };
+
+/* 브라우저 뒤로가기 버튼 처리 */
+window.addEventListener('popstate', (e) => {
+  const screen = e.state?.screen || 'missions';
+  showScreen(screen, false); // pushState 없이 전환
+  if (screen === 'missions') renderMissions();
+});
 </script>
 </body>
 </html>
