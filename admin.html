@@ -137,7 +137,7 @@
 <script>
 /* ── 설정 ── */
 const API       = 'https://stepquest-api.hialwl.workers.dev';
-const ADMIN_KEY = 'teacher2026';
+const ADMIN_KEY = 'teacher2025'; /* ★ 반드시 변경하세요 ★ */
 
 /* ── UI 헬퍼 ── */
 const $ = id => document.getElementById(id);
@@ -292,7 +292,7 @@ function renderDashboard() {
     `<th style="text-align:center">도장</th>`;
 
   $('dash-tbody').innerHTML = students.map(st => {
-    const sSubs = allSubs.filter(s => s.uid===st.uid);
+    const sSubs = allSubs.filter(s => s.name===st.name);
     const cells = missions.map(m => {
       const sub = sSubs.find(s => s.missionId===m.id);
       const ico = { '승인':'🏆', '대기중':'⏳', '반려':'✕' };
