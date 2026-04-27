@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StepQuest 관리자</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+<title>StepQuest</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏅</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -12,155 +12,138 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--paper);color:var(--ink);font-family:var(--fb);min-height:100vh}
   body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(26,26,46,.06) 39px,rgba(26,26,46,.06) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(26,26,46,.06) 39px,rgba(26,26,46,.06) 40px)}
-  .wrap{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:16px}
-  .app-header{text-align:center;padding:24px 0 18px;border-bottom:2px solid var(--ink);margin-bottom:20px}
-  .app-header h1{font-family:var(--fh);font-size:20px}
+  .wrap{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:16px}
+  .app-header{text-align:center;padding:28px 0 20px;border-bottom:2px solid var(--ink);margin-bottom:20px}
+  .app-header .emoji{font-size:40px;display:block;margin-bottom:6px}
+  .app-header h1{font-family:var(--fh);font-size:22px;letter-spacing:-.5px}
   .app-header .sub{font-size:12px;color:rgba(26,26,46,.5);margin-top:4px}
-  .tabs{display:flex;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
-  .tab-btn{flex:1;padding:9px 4px;font-size:12px;font-weight:700;font-family:var(--fb);border:none;background:transparent;cursor:pointer;color:rgba(26,26,46,.45);border-right:1px solid var(--border);transition:background .15s,color .15s}
-  .tab-btn:last-child{border-right:none}
-  .tab-btn.active{background:var(--ink);color:var(--paper)}
-  .card{background:var(--paper);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
-  .card-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
-  .avatar{width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
-  .card-meta h3{font-size:14px;font-weight:700;margin-bottom:2px}
-  .card-meta p{font-size:12px;color:rgba(26,26,46,.55)}
-  .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .team-chip{display:inline-block;margin-top:10px;background:var(--ink);color:var(--paper);font-size:12px;padding:4px 14px;border-radius:20px;font-weight:500}
+  .card{background:var(--paper);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;position:relative}
+  .card-stamp-ok::after{content:'🏆';position:absolute;top:12px;right:12px;font-size:28px}
+  .card-stamp-wait::after{content:'⏳';position:absolute;top:12px;right:12px;font-size:24px}
+  .card-stamp-rej::after{content:'✕';position:absolute;top:10px;right:14px;font-size:20px;font-weight:700;color:var(--accent)}
+  .login-card{background:var(--paper);border:2px solid var(--ink);border-radius:12px;padding:28px 22px}
+  .login-card h2{font-family:var(--fh);font-size:18px;margin-bottom:20px;text-align:center}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:11px;font-weight:700;margin-bottom:5px;letter-spacing:.5px;color:rgba(26,26,46,.6)}
+  .field input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:var(--fb);background:var(--paper);color:var(--ink);transition:border-color .2s}
+  .field input:focus{outline:none;border-color:var(--ink)}
+  .btn{width:100%;padding:13px;border:none;border-radius:8px;font-size:15px;font-weight:700;font-family:var(--fb);cursor:pointer;transition:opacity .15s,transform .1s}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--ink);color:var(--paper)}
+  .btn-primary:hover{opacity:.85}
+  .btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--border);margin-top:8px}
+  .btn-success{background:var(--green);color:#fff}
+  .btn-sm{width:auto;padding:7px 16px;font-size:13px;font-weight:500;margin-top:0}
+  .prog-wrap{margin-bottom:16px}
+  .prog-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;color:rgba(26,26,46,.6)}
+  .prog-track{height:8px;background:var(--paper2);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+  .prog-bar{height:100%;background:var(--gold);border-radius:4px;transition:width .4s}
+  .stamp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+  .stamp-box{aspect-ratio:1;border:1.5px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--paper2)}
+  .stamp-box.on{background:#fff8e6;border-color:var(--gold)}
+  .m-icon{font-size:22px;margin-bottom:8px;display:block}
+  .m-title{font-family:var(--fh);font-size:15px;margin-bottom:4px;padding-right:38px}
+  .m-desc{font-size:13px;color:rgba(26,26,46,.6);margin-bottom:12px;line-height:1.6}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
   .b-wait{background:#fff3cd;color:#7d5a00}
   .b-ok{background:#d4edda;color:#1a5c2a}
   .b-rej{background:#fde8e8;color:#8b1a1a}
-  .photo-box{width:100%;border-radius:8px;aspect-ratio:4/3;object-fit:cover;background:var(--paper2);border:1px solid var(--border);display:block;cursor:pointer}
-  .action-row{display:flex;gap:8px;margin-top:10px}
-  .btn{flex:1;padding:11px;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:var(--fb);cursor:pointer;transition:opacity .15s}
-  .btn:active{opacity:.8}
-  .btn-success{background:var(--green);color:#fff}
-  .btn-danger{background:var(--accent);color:#fff}
-  .btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--border);flex:unset;padding:7px 14px;font-size:12px}
-  .btn-primary{background:var(--ink);color:var(--paper)}
-  .reject-section{display:none;margin-top:10px}
-  .reject-section textarea{width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--fb);background:var(--paper);color:var(--ink);resize:none}
-  .reject-section button{margin-top:8px;width:100%}
-  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
-  .stat{background:var(--paper2);border-radius:10px;padding:14px 10px;text-align:center}
-  .stat-num{font-size:28px;font-weight:700}
-  .stat-label{font-size:11px;color:rgba(26,26,46,.5);margin-top:3px}
-  .tbl-wrap{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th{padding:10px;text-align:left;font-weight:700;font-size:11px;color:rgba(26,26,46,.5);border-bottom:1.5px solid var(--border);letter-spacing:.5px}
-  td{padding:10px;border-bottom:1px solid var(--border)}
-  tr:last-child td{border-bottom:none}
-  .cell-c{text-align:center;font-size:15px}
-  .list-row{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
-  .list-row:last-child{border-bottom:none}
-  .row-info{flex:1}
-  .row-title{font-size:14px;font-weight:700}
-  .row-sub{font-size:11px;color:rgba(26,26,46,.5);margin-top:2px}
-  .s-tag{font-size:11px;background:#e8f0fb;color:var(--accent2);padding:2px 8px;border-radius:12px;display:inline-block;margin-top:3px}
-  .denied{text-align:center;padding:80px 20px}
-  .denied .icon{font-size:60px;margin-bottom:16px}
-  .denied h2{font-family:var(--fh);font-size:20px;margin-bottom:8px}
-  .denied p{font-size:14px;color:rgba(26,26,46,.5);line-height:1.7}
+  .b-none{background:var(--paper2);color:rgba(26,26,46,.5)}
+  .b-unit{background:#e8f0fb;color:var(--accent2);margin-left:4px}
+  .upload-area{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;background:var(--paper2);position:relative;transition:background .2s,border-color .2s}
+  .upload-area:hover{border-color:var(--ink);background:#ede9de}
+  .upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .preview-img{width:100%;border-radius:8px;margin-bottom:10px;max-height:200px;object-fit:cover;display:none}
+  .rej-msg{background:#fde8e8;border-left:3px solid var(--accent);padding:10px 12px;border-radius:0 6px 6px 0;font-size:13px;color:#5c1a1a;margin-bottom:10px;line-height:1.6}
   .loading{position:fixed;inset:0;z-index:100;background:rgba(250,248,242,.88);display:none;align-items:center;justify-content:center;font-size:14px;gap:10px}
   .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 20px;border-radius:24px;font-size:13px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
   .toast.show{opacity:1}
-  .empty{text-align:center;padding:32px;font-size:14px;color:rgba(26,26,46,.4)}
+  .err{font-size:12px;color:var(--accent);margin-top:8px;text-align:center;min-height:18px}
   .screen{display:none}
-  .screen.active{display:block}
-  .tab-pane{display:none}
-  .tab-pane.active{display:block}
-  .photo-modal{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:20px}
-  .photo-modal.show{display:flex}
-  .photo-modal img{max-width:100%;max-height:85vh;border-radius:8px;object-fit:contain}
-  .photo-modal .close{position:absolute;top:16px;right:20px;font-size:28px;color:#fff;cursor:pointer}
-  .sort-btn{padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;background:transparent;font-size:12px;font-weight:700;font-family:var(--fb);cursor:pointer;color:rgba(26,26,46,.5);transition:all .15s}
-  .sort-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .screen.active{display:block;animation:fadeUp .25s ease}
   @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="app-header">
-    <span style="font-size:36px;display:block;margin-bottom:6px">📋</span>
-    <h1>StepQuest 관리자</h1>
-    <p class="sub">선생님 전용 페이지</p>
+    <span class="emoji">🏅</span>
+    <h1>걸어서 만나는 퀘스트</h1>
+    <p class="sub" id="trip-name">StepQuest</p>
+    <div id="chip-wrap" style="display:none">
+      <span class="team-chip" id="chip-text"></span>
+    </div>
   </header>
 
-  <!-- 접근 거부 -->
-  <div id="screen-denied" class="screen active">
-    <div class="denied">
-      <div class="icon">🔐</div>
-      <h2>접근할 수 없어요</h2>
-      <p>올바른 URL로 접속해 주세요.<br>예: admin.html?key=비밀번호</p>
+  <!-- 로그인 -->
+  <div id="screen-login" class="screen active">
+    <div class="login-card">
+      <h2>🎒 입장하기</h2>
+      <div class="field">
+        <label>이름</label>
+        <input id="inp-name" type="text" placeholder="홍길동" autocomplete="name" maxlength="10">
+      </div>
+      <div class="field">
+        <label>PIN 번호</label>
+        <input id="inp-pin" type="password" placeholder="선생님께 받은 PIN 번호"
+               inputmode="numeric" maxlength="6"
+               onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <p class="err" id="login-err"></p>
+      <button class="btn btn-primary" onclick="doLogin()">입장</button>
     </div>
+    <p style="font-size:12px;color:rgba(26,26,46,.45);text-align:center;margin-top:14px;line-height:1.7">이름과 PIN 번호를 모른다면 선생님께 문의하세요.</p>
   </div>
 
-  <!-- 관리자 메인 -->
-  <div id="screen-main" class="screen">
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('review')">📷 제출</button>
-      <button class="tab-btn" onclick="switchTab('students')">👤 학생</button>
-      <button class="tab-btn" onclick="switchTab('dashboard')">📊 현황</button>
+  <!-- 미션 목록 -->
+  <div id="screen-missions" class="screen">
+    <div class="prog-wrap">
+      <div class="prog-label"><span>🏆 도장 현황</span><span id="prog-text">0 / 0</span></div>
+      <div class="prog-track"><div class="prog-bar" id="prog-bar" style="width:0%"></div></div>
     </div>
+    <div class="stamp-grid" id="stamp-grid"></div>
+    <div id="mission-list"></div>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="doLogout()">로그아웃</button>
+  </div>
 
-    <!-- 제출 확인 -->
-    <div id="tab-review" class="tab-pane active">
-      <div id="pending-list"><p class="empty">불러오는 중...</p></div>
-    </div>
-
-    <!-- 학생 목록 -->
-    <div id="tab-students" class="tab-pane">
-      <div class="card" style="padding:0;overflow:hidden">
-        <div id="student-rows"><p class="empty">불러오는 중...</p></div>
-      </div>
-      <p style="font-size:12px;color:rgba(26,26,46,.5);text-align:center;margin-top:12px;line-height:1.7">
-        학생 추가/수정은 Notion에서 직접 해주세요.
-      </p>
-    </div>
-
-    <!-- 현황 대시보드 -->
-    <div id="tab-dashboard" class="tab-pane">
-      <div class="stats-grid" id="dash-stats"></div>
-      <!-- 정렬 버튼 -->
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button class="sort-btn active" onclick="setSort('name')"   id="sort-name">이름순</button>
-        <button class="sort-btn"        onclick="setSort('team')"   id="sort-team">모둠순</button>
-        <button class="sort-btn"        onclick="setSort('stamp')"  id="sort-stamp">도장순</button>
-      </div>
-      <div class="card" style="padding:0;overflow:hidden">
-        <div class="tbl-wrap">
-          <table><thead><tr id="dash-thead"></tr></thead><tbody id="dash-tbody"></tbody></table>
-        </div>
-      </div>
-    </div>
+  <!-- 미션 상세 -->
+  <div id="screen-detail" class="screen">
+    <button class="btn btn-ghost btn-sm" style="margin-bottom:16px" onclick="showMissions()">← 목록으로</button>
+    <div class="card" id="detail-card"></div>
   </div>
 </div>
 
 <div class="loading" id="loading"><div class="spinner"></div><span id="lmsg">잠시만요...</span></div>
 <div class="toast" id="toast"></div>
-<div class="photo-modal" id="photo-modal" onclick="closePhoto()">
-  <span class="close">✕</span><img id="modal-img" src="">
-</div>
 
 <script>
 /* ── 설정 ── */
-const API       = 'https://stepquest-api.hialwl.workers.dev';
-const ADMIN_KEY = 'teacher2025'; /* ★ 반드시 변경하세요 ★ */
+const API     = 'https://stepquest-api.hialwl.workers.dev';
+const CLOUD   = 'doaj5mitt';
+const PRESET  = 'StepQuest';
+const SQ_KEY  = 'sq_user'; // localStorage 키
+
+/* ── 상태 ── */
+let userProfile = null;
+let missions    = [];
+let submissions = {};
+let pollTimer   = null;
 
 /* ── UI 헬퍼 ── */
 const $ = id => document.getElementById(id);
-let missions=[], students=[], allSubs=[];
-let pollTimer = null;
-let sortBy = 'name'; // 정렬 기준: name / team / stamp
-
+const showScreen  = name => ['login','missions','detail'].forEach(s => $('screen-'+s).classList.toggle('active', s===name));
 const showLoading = (m='') => { $('loading').style.display='flex'; $('lmsg').textContent=m||'잠시만요...'; };
 const hideLoading = () => $('loading').style.display='none';
-const toast = (msg,d=2400) => {
+const toast = (msg, dur=2400) => {
   const e=$('toast'); e.textContent=msg; e.classList.add('show');
-  setTimeout(()=>e.classList.remove('show'),d);
+  setTimeout(()=>e.classList.remove('show'), dur);
 };
-const tsStr = ts => ts ? new Date(ts).toLocaleString('ko',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
+const unitLabel = { individual:'개인 미션', team:'모둠 미션', class:'학급 미션' };
 
+/* ── API 호출 헬퍼 ── */
 async function api(path, options={}) {
   const res = await fetch(API + path, {
     headers: { 'Content-Type': 'application/json' },
@@ -169,179 +152,241 @@ async function api(path, options={}) {
   return res.json();
 }
 
-/* ── URL 파라미터로 접근 제어 ── */
-const urlKey = new URLSearchParams(window.location.search).get('key');
-if (urlKey === ADMIN_KEY) {
-  $('screen-denied').classList.remove('active');
-  $('screen-main').classList.add('active');
-  loadAdmin();
-} else {
-  hideLoading();
-}
-
-/* ── 탭 전환 ── */
-window.switchTab = name => {
-  const names = ['review','students','dashboard'];
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', names[i]===name));
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  $('tab-'+name).classList.add('active');
-};
-
-/* ── 데이터 로드 ── */
-async function loadAdmin() {
-  showLoading('데이터 불러오는 중...');
-  try {
-    const [mData, sData, stData] = await Promise.all([
-      api('/missions'),
-      api('/admin/submissions'),
-      api('/admin/students')
-    ]);
-    missions = mData  || [];
-    allSubs  = sData  || [];
-    students = stData || [];
-
-    renderPending();
-    renderStudentRows();
-    renderDashboard();
-    hideLoading();
-
-    /* 30초마다 제출 현황 갱신 */
-    if (pollTimer) clearInterval(pollTimer);
-    pollTimer = setInterval(async () => {
-      allSubs = await api('/admin/submissions') || [];
-      renderPending();
-      renderDashboard();
-    }, 30000);
-
-  } catch(e) { hideLoading(); toast('불러오기 실패'); console.error(e); }
-}
-
-/* ── 제출 확인 ── */
-function renderPending() {
-  const pending = allSubs.filter(s => s.status==='대기중');
-  if (!pending.length) { $('pending-list').innerHTML='<p class="empty">검토할 제출이 없습니다 🎉</p>'; return; }
-  $('pending-list').innerHTML = pending.map(s => `
-    <div class="card" id="sub-${s.id}">
-      <div class="card-header">
-        <div class="avatar">${(s.teamName||'-').slice(0,2)}</div>
-        <div class="card-meta">
-          <h3>${s.teamName||'-'} · ${s.name||'-'}</h3>
-          <p>${s.missionTitle||'-'} · ${tsStr(s.createdAt)}</p>
-        </div>
-        <span class="badge b-wait">대기중</span>
-      </div>
-      <img class="photo-box" src="${s.photoUrl}" onclick="openPhoto('${s.photoUrl}')">
-      <div class="action-row">
-        <button class="btn btn-success" onclick="approve('${s.id}')">🏆 도장 승인</button>
-        <button class="btn btn-danger"  onclick="toggleReject('${s.id}')">✕ 반려</button>
-      </div>
-      <div class="reject-section" id="rej-${s.id}">
-        <textarea rows="2" placeholder="반려 사유 (선택 — 학생 화면에 표시됩니다)" id="rejmsg-${s.id}"></textarea>
-        <button class="btn btn-danger" onclick="reject('${s.id}')">반려 전송</button>
-      </div>
-    </div>`).join('');
-}
-
-window.approve = async id => {
-  showLoading('승인 중...');
-  await api(`/submissions/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status: '승인' })
-  });
-  allSubs = await api('/admin/submissions') || [];
-  renderPending();
-  renderDashboard();
-  hideLoading();
-  toast('✅ 도장 승인 완료!');
-};
-
-window.toggleReject = id => {
-  const el=$('rej-'+id); el.style.display=el.style.display==='block'?'none':'block';
-};
-
-window.reject = async id => {
-  const reason = $('rejmsg-'+id).value.trim();
-  showLoading('반려 처리 중...');
-  await api(`/submissions/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status: '반려', rejectReason: reason||'' })
-  });
-  allSubs = await api('/admin/submissions') || [];
-  renderPending();
-  renderDashboard();
-  hideLoading();
-  toast('반려 처리되었습니다');
-};
-
-/* ── 학생 목록 ── */
-function renderStudentRows() {
-  $('student-rows').innerHTML = students.length ? students.map(s => `
-    <div class="list-row">
-      <div class="avatar" style="font-size:11px">${(s.name||'?').slice(0,2)}</div>
-      <div class="row-info">
-        <div class="row-title">${s.name}</div>
-        <div class="row-sub">PIN: ${s.pin||'미설정'}</div>
-        <span class="s-tag">${s.teamName||'모둠 미배정'}</span>
-      </div>
-    </div>`).join('') : '<p class="empty">등록된 학생이 없습니다</p>';
-}
-
-/* ── 정렬 기준 변경 ── */
-window.setSort = key => {
-  sortBy = key;
-  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-  $('sort-' + key).classList.add('active');
-  renderDashboard();
-};
-
-/* ── 현황 대시보드 ── */
-function renderDashboard() {
-  const approved = allSubs.filter(s=>s.status==='승인').length;
-  const pending  = allSubs.filter(s=>s.status==='대기중').length;
-
-  $('dash-stats').innerHTML=`
-    <div class="stat"><div class="stat-num">${students.length}</div><div class="stat-label">참여 학생</div></div>
-    <div class="stat"><div class="stat-num" style="color:var(--green)">${approved}</div><div class="stat-label">승인된 도장</div></div>
-    <div class="stat"><div class="stat-num" style="color:var(--gold)">${pending}</div><div class="stat-label">검토 대기</div></div>`;
-
-  $('dash-thead').innerHTML = `<th>학생</th><th>모둠</th>` +
-    missions.map(m=>`<th style="text-align:center">${m.icon||'📸'}</th>`).join('') +
-    `<th style="text-align:center">도장</th>`;
-
-  /* 정렬 적용 */
-  const sorted = [...students].sort((a, b) => {
-    if (sortBy === 'name') {
-      return a.name.localeCompare(b.name, 'ko');
-    } else if (sortBy === 'team') {
-      return (a.teamName||'').localeCompare(b.teamName||'', 'ko');
-    } else if (sortBy === 'stamp') {
-      const aStamp = allSubs.filter(s => s.name===a.name && s.status==='승인').length;
-      const bStamp = allSubs.filter(s => s.name===b.name && s.status==='승인').length;
-      return bStamp - aStamp; // 도장 많은 순
+/* ══════════════════════════════════════════
+   앱 시작 시 자동 로그인
+   localStorage에 저장된 정보로 자동 로그인
+   ══════════════════════════════════════════ */
+(async () => {
+  const saved = localStorage.getItem(SQ_KEY);
+  if (saved) {
+    showLoading('자동 로그인 중...');
+    try {
+      const { name, pin } = JSON.parse(saved);
+      await loginWithCredentials(name, pin);
+    } catch(e) {
+      localStorage.removeItem(SQ_KEY);
+      hideLoading();
+      showScreen('login');
     }
-    return 0;
+  } else {
+    showScreen('login');
+    hideLoading();
+  }
+})();
+
+/* ── 로그인 버튼 ── */
+window.doLogin = async () => {
+  const name = $('inp-name').value.trim();
+  const pin  = $('inp-pin').value.trim();
+  $('login-err').textContent = '';
+
+  if (!name) { $('login-err').textContent='이름을 입력해 주세요.'; return; }
+  if (!pin)  { $('login-err').textContent='PIN 번호를 입력해 주세요.'; return; }
+  if (!/^\d{4,6}$/.test(pin)) { $('login-err').textContent='PIN은 숫자 4~6자리예요.'; return; }
+
+  showLoading('확인 중...');
+  try {
+    await loginWithCredentials(name, pin);
+  } catch(e) {
+    hideLoading();
+    $('login-err').textContent = e.message || '로그인 실패. 다시 시도해 주세요.';
+  }
+};
+
+/* ── 실제 로그인 처리 ── */
+async function loginWithCredentials(name, pin) {
+  const data = await api('/login', {
+    method: 'POST',
+    body: JSON.stringify({ name, pin })
   });
 
-  $('dash-tbody').innerHTML = sorted.map(st => {
-    const sSubs = allSubs.filter(s => s.name===st.name);
-    const cells = missions.map(m => {
-      const sub = sSubs.find(s => s.missionId===m.id);
-      const ico = { '승인':'🏆', '대기중':'⏳', '반려':'✕' };
-      return `<td class="cell-c">${ico[sub?.status]||'—'}</td>`;
-    }).join('');
-    const stamped = sSubs.filter(s=>s.status==='승인').length;
-    return `<tr>
-      <td style="font-weight:700">${st.name}</td>
-      <td style="font-size:12px;color:rgba(26,26,46,.6)">${st.teamName||'-'}</td>
-      ${cells}
-      <td class="cell-c" style="font-weight:700;color:var(--green)">${stamped}</td>
-    </tr>`;
+  if (data.error) {
+    localStorage.removeItem(SQ_KEY);
+    throw new Error(data.error);
+  }
+
+  /* 로그인 성공 → localStorage 저장 */
+  localStorage.setItem(SQ_KEY, JSON.stringify({ name, pin }));
+  userProfile = data; // { name, teamName, pin }
+
+  await loadApp();
+}
+
+/* ── 앱 초기화 ── */
+async function loadApp() {
+  showLoading('미션 불러오는 중...');
+
+  /* 팀 칩 표시 */
+  $('chip-wrap').style.display = 'block';
+  $('chip-text').textContent = `${userProfile.teamName||'미배정'} · ${userProfile.name}`;
+
+  /* 미션 + 제출 현황 동시 로드 */
+  const [mData, sData] = await Promise.all([
+    api('/missions'),
+    api(`/submissions?name=${encodeURIComponent(userProfile.name)}`)
+  ]);
+
+  missions = mData || [];
+  submissions = {};
+  (sData||[]).forEach(s => { submissions[s.missionId] = s; });
+
+  renderMissions();
+  hideLoading();
+  showScreen('missions');
+
+  /* 폴링 시작 (30초마다 제출 현황 갱신) */
+  startPolling();
+}
+
+/* ── 폴링 (실시간 대신) ── */
+function startPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    const sData = await api(`/submissions?name=${encodeURIComponent(userProfile.name)}`);
+    const prev  = JSON.stringify(submissions);
+    submissions  = {};
+    (sData||[]).forEach(s => { submissions[s.missionId] = s; });
+    /* 변화가 있을 때만 화면 갱신 */
+    if (JSON.stringify(submissions) !== prev) renderMissions();
+  }, 30000);
+}
+
+/* ── 로그아웃 ── */
+window.doLogout = () => {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer=null; }
+  localStorage.removeItem(SQ_KEY);
+  userProfile=null; missions=[]; submissions={};
+  $('chip-wrap').style.display='none';
+  $('inp-name').value=''; $('inp-pin').value='';
+  showScreen('login');
+};
+
+/* ── 미션 목록 렌더링 ── */
+function renderMissions() {
+  const approved = missions.filter(m => submissions[m.id]?.status==='승인').length;
+  $('prog-text').textContent = `${approved} / ${missions.length}`;
+  $('prog-bar').style.width  = missions.length ? `${(approved/missions.length)*100}%` : '0%';
+
+  $('stamp-grid').innerHTML = missions.slice(0,8).map((m,i) => {
+    const ok = submissions[m.id]?.status==='승인';
+    return `<div class="stamp-box ${ok?'on':''}">${ok?'🏆':`<span style="font-size:12px;color:rgba(26,26,46,.25)">${i+1}</span>`}</div>`;
+  }).join('');
+
+  const sc = { '승인':'card-stamp-ok', '대기중':'card-stamp-wait', '반려':'card-stamp-rej' };
+  const bc = { '승인':'b-ok', '대기중':'b-wait', '반려':'b-rej' };
+  const bl = { '승인':'✓ 도장 획득', '대기중':'⏳ 검토중', '반려':'✕ 반려' };
+
+  $('mission-list').innerHTML = missions.map(m => {
+    const st = submissions[m.id]?.status || 'none';
+    return `<div class="card ${sc[st]||''}" style="cursor:pointer" onclick="openMission('${m.id}')">
+      <span class="m-icon">${m.icon||'📸'}</span>
+      <div class="m-title">${m.title}</div>
+      <div class="m-desc">${m.description||''}</div>
+      <span class="badge ${bc[st]||'b-none'}">${bl[st]||'미제출'}</span>
+      ${m.unit!=='individual'?`<span class="badge b-unit">${unitLabel[m.unit]||''}</span>`:''}
+    </div>`;
   }).join('');
 }
 
-/* ── 사진 모달 ── */
-window.openPhoto  = url => { $('modal-img').src=url; $('photo-modal').classList.add('show'); };
-window.closePhoto = ()  => $('photo-modal').classList.remove('show');
+/* ── 미션 상세 ── */
+window.openMission = missionId => {
+  const m   = missions.find(x => x.id===missionId);
+  const sub = submissions[missionId];
+  const st  = sub?.status || 'none';
+
+  let html = `<span class="m-icon">${m.icon||'📸'}</span>
+    <div class="m-title">${m.title}</div>
+    <div class="m-desc">${m.description||''}</div>`;
+
+  if (st==='승인') {
+    html += `<div style="text-align:center;padding:20px 0;font-size:52px">🏆</div>
+      <p style="text-align:center;font-size:14px;color:var(--green);font-weight:700">도장 획득 완료!</p>`;
+  } else if (st==='대기중') {
+    html += `<img class="preview-img" src="${sub.photoUrl}" style="display:block">
+      <div class="badge b-wait" style="margin-top:4px">⏳ 선생님 확인 중입니다</div>`;
+  } else {
+    if (st==='반려' && sub.rejectReason) html += `<div class="rej-msg">💬 ${sub.rejectReason}</div>`;
+    if (st==='반려') html += `<p style="font-size:13px;color:rgba(26,26,46,.6);margin-bottom:10px">다시 사진을 찍어 제출하세요</p>`;
+    html += `<img class="preview-img" id="prev-${missionId}">
+      <div class="upload-area">
+        <input type="file" accept="image/*" capture="environment" onchange="previewFile(event,'${missionId}')">
+        <span style="font-size:28px;display:block;margin-bottom:6px">📷</span>
+        <p>사진을 탭해서 선택하거나<br>카메라로 바로 찍기</p>
+      </div>
+      <button class="btn btn-success" style="margin-top:12px;display:none"
+              id="submit-btn-${missionId}" onclick="submitMission('${missionId}')">🏆 제출하기</button>`;
+  }
+  $('detail-card').innerHTML = html;
+  pendingFile = null;
+  showScreen('detail');
+};
+
+/* ── 사진 미리보기 ── */
+let pendingFile = null;
+window.previewFile = (e, missionId) => {
+  const file = e.target.files[0]; if (!file) return;
+  pendingFile = file;
+  const img = $(`prev-${missionId}`);
+  img.src = URL.createObjectURL(file); img.style.display='block';
+  $(`submit-btn-${missionId}`).style.display='block';
+};
+
+/* ── 미션 제출 ── */
+window.submitMission = async missionId => {
+  if (!pendingFile) { toast('사진을 먼저 선택해 주세요'); return; }
+  showLoading('사진 업로드 중...');
+  try {
+    /* Cloudinary 업로드 */
+    const formData = new FormData();
+    formData.append('file', pendingFile);
+    formData.append('upload_preset', PRESET);
+    formData.append('folder', `stepquest/${encodeURIComponent(userProfile.name)}`);
+
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`,
+      { method:'POST', body:formData }
+    );
+    if (!res.ok) throw new Error('사진 업로드 실패');
+    const { secure_url: photoUrl } = await res.json();
+
+    /* Workers로 제출 기록 저장 */
+    const mission = missions.find(m => m.id===missionId);
+    const data = await api('/submissions', {
+      method: 'POST',
+      body: JSON.stringify({
+        name:         userProfile.name,
+        teamName:     userProfile.teamName,
+        missionId:    missionId,
+        missionTitle: mission?.title || '',
+        photoUrl
+      })
+    });
+
+    if (data.error) throw new Error(data.error);
+
+    /* Workers 응답 오류 방지: 직접 제출 데이터 구성 */
+    submissions[missionId] = {
+      id:           data.id || '',
+      name:         userProfile.name,
+      teamName:     userProfile.teamName,
+      missionId:    missionId,
+      missionTitle: mission?.title || '',
+      photoUrl:     photoUrl,
+      status:       '대기중',
+      rejectReason: '',
+      createdAt:    new Date().toISOString()
+    };
+    hideLoading();
+    toast('제출 완료! 선생님이 곧 확인해 드릴게요 👍');
+    showMissions();
+  } catch(e) {
+    hideLoading();
+    toast('업로드 실패. 다시 시도해 주세요.');
+    console.error(e);
+  }
+};
+
+window.showMissions = () => { renderMissions(); showScreen('missions'); };
 </script>
 </body>
 </html>
