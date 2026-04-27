@@ -70,8 +70,8 @@
 <body>
 <div class="wrap">
   <header class="app-header">
-    <span class="emoji">🚶‍➡️🏅🚶</span>
-    <h1>걸어서 만나는 퀘스트</h1>
+    <span class="emoji">🏅</span>
+    <h1>StepQuest</h1>
     <p class="sub" id="trip-name">StepQuest</p>
     <div id="chip-wrap" style="display:none">
       <span class="team-chip" id="chip-text"></span>
@@ -364,7 +364,18 @@ window.submitMission = async missionId => {
 
     if (data.error) throw new Error(data.error);
 
-    submissions[missionId] = data;
+    /* Workers 응답 오류 방지: 직접 제출 데이터 구성 */
+    submissions[missionId] = {
+      id:           data.id || '',
+      name:         userProfile.name,
+      teamName:     userProfile.teamName,
+      missionId:    missionId,
+      missionTitle: mission?.title || '',
+      photoUrl:     photoUrl,
+      status:       '대기중',
+      rejectReason: '',
+      createdAt:    new Date().toISOString()
+    };
     hideLoading();
     toast('제출 완료! 선생님이 곧 확인해 드릴게요 👍');
     showMissions();
