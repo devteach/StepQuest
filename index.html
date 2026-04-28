@@ -50,7 +50,9 @@
   .b-ok{background:#d4edda;color:#1a5c2a}
   .b-rej{background:#fde8e8;color:#8b1a1a}
   .b-none{background:var(--paper2);color:rgba(26,26,46,.5)}
-  .b-unit{background:#e8f0fb;color:var(--accent2);margin-left:4px}
+  .b-unit-individual{background:#e8f0fb;color:#2e6da4;margin-left:4px;display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .b-unit-team{background:#e8f5e9;color:#2d7a4f;margin-left:4px;display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .b-unit-class{background:#fff3cd;color:#7d5a00;margin-left:4px;display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
   .upload-area{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;background:var(--paper2);position:relative;transition:background .2s,border-color .2s}
   .upload-area:hover{border-color:var(--ink);background:#ede9de}
   .upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
@@ -71,7 +73,7 @@
 <div class="wrap">
   <header class="app-header">
     <span class="emoji">🏅</span>
-    <h1>걸어서 만나는 퀘스트</h1>
+    <h1>StepQuest</h1>
     <p class="sub" id="trip-name">StepQuest</p>
     <div id="chip-wrap" style="display:none">
       <span class="team-chip" id="chip-text"></span>
@@ -149,6 +151,7 @@ const toast = (msg, dur=2400) => {
   setTimeout(()=>e.classList.remove('show'), dur);
 };
 const unitLabel = { individual:'개인', team:'모둠', class:'학급' };
+const unitClass = { individual:'b-unit-individual', team:'b-unit-team', class:'b-unit-class' };
 
 /* ── API 호출 헬퍼 ── */
 async function api(path, options={}) {
